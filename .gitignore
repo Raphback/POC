@@ -1,0 +1,20 @@
+# --- Angular ---
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.angular/
+/frontend/.vscode/
+
+# --- Java / Spring Boot ---
+/backend/target/
+/backend/.mvn/
+/backend/.vscode/
+/backend/bin/
+*.class
+*.log
+*.jar
+
+# --- IDE & Système ---
+.DS_Store
+.idea/
+*.iml
+.vscode/
