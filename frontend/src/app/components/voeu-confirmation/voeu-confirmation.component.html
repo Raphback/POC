@@ -1,0 +1,68 @@
+<div class="container mt-5">
+    <div class="card glass-card p-5 text-center">
+        <!-- Success Icon -->
+        <div class="success-icon mb-4">
+            <div class="checkmark-circle">
+                <div class="checkmark"></div>
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <h2 class="neon-text-cyan mb-4">✅ Vos vœux ont bien été enregistrés !</h2>
+
+        <div *ngIf="etudiant" class="student-info mb-4">
+            <p class="text-light mb-1">
+                <strong>{{ etudiant.prenom }} {{ etudiant.nom }}</strong>
+            </p>
+            <p class="text-muted-custom">{{ etudiant.lycee?.nom }} - Classe {{ etudiant.classe }}</p>
+        </div>
+
+        <!-- Récapitulatif -->
+        <div class="recap-container glass-panel p-4 mb-4">
+            <h4 class="text-neon-violet mb-3">📋 Récapitulatif de vos vœux</h4>
+
+            <div class="voeux-list">
+                <div *ngFor="let voeu of voeux; let i = index" class="voeu-item">
+                    <div class="voeu-badge">Vœu {{ i + 1 }}</div>
+                    <div class="voeu-details">
+                        <span class="voeu-titre">{{ voeu.titre }}</span>
+                        <span class="voeu-type">{{ voeu.type }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div *ngIf="option" class="option-selected mt-4">
+                <span class="badge badge-neon">Option {{ option }}</span>
+            </div>
+        </div>
+
+        <!-- Informations complémentaires -->
+        <div class="info-box glass-alert mb-4">
+            <p class="mb-2">
+                <strong>📧 Confirmation par email</strong>
+            </p>
+            <p class="text-muted-custom mb-0">
+                Un email de confirmation vous a été envoyé avec le récapitulatif de vos vœux.
+            </p>
+        </div>
+
+        <div class="info-box glass-alert mb-4">
+            <p class="mb-2">
+                <strong>📅 Prochaines étapes</strong>
+            </p>
+            <p class="text-muted-custom mb-0">
+                Vous serez informé des résultats d'affectation prochainement.
+            </p>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="action-buttons mt-4">
+            <button class="btn btn-neon-cyan me-3" (click)="retourAccueil()">
+                🏠 Retour à l'accueil
+            </button>
+            <button class="btn btn-outline-neon" (click)="seDeconnecter()">
+                🚪 Se déconnecter
+            </button>
+        </div>
+    </div>
+</div>

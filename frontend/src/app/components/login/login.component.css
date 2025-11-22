@@ -1,0 +1,70 @@
+/* Inherits global glassmorphism styles */
+.glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--neon-cyan) !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.glass-input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(0, 243, 255, 0.3) !important;
+    color: white !important;
+    padding: 0.75rem;
+    font-size: 1rem;
+}
+
+.glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: var(--neon-cyan) !important;
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.4) !important;
+    color: white !important;
+    outline: none;
+}
+
+.mb-3 {
+    margin-bottom: 1.5rem !important;
+}
+
+.btn-neon-cyan {
+    background: transparent;
+    border: 2px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    transition: all 0.3s ease;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0.75rem;
+}
+
+.btn-neon-cyan:hover:not(:disabled) {
+    background: var(--neon-cyan);
+    color: black;
+    box-shadow: 0 0 20px var(--neon-cyan);
+    transform: translateY(-2px);
+}
+
+.btn-neon-cyan:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.alert-danger {
+    background: rgba(255, 59, 48, 0.1);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    color: #ff3b30;
+}

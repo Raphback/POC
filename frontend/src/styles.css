@@ -1,0 +1,181 @@
+/* Global Styles - Futuristic Dark Mode */
+:root {
+    --bg-obsidian: #0b0b0f;
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --bg-card-hover: rgba(255, 255, 255, 0.07);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --neon-cyan: #00f3ff;
+    --neon-violet: #bc13fe;
+    --text-main: #ffffff;
+    --text-muted: #a0a0a0;
+    --font-main: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-obsidian);
+    color: var(--text-main);
+    font-family: var(--font-main);
+    min-height: 100vh;
+    overflow-y: auto;
+    /* Ensure scrolling is possible */
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(188, 19, 254, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(0, 243, 255, 0.1) 0%, transparent 20%);
+}
+
+/* ... existing headers ... */
+
+/* Glassmorphism Utilities */
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    position: relative;
+    /* Context for z-index */
+    z-index: 1;
+}
+
+/* Form Controls Override */
+.form-control,
+.form-select {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-glass);
+    color: var(--text-main);
+    border-radius: 8px;
+    position: relative;
+    /* Ensure inputs are above background */
+    z-index: 10;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 0 0.25rem rgba(0, 243, 255, 0.25);
+    color: var(--text-main);
+}
+
+.form-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--neon-violet), #9c0ce6);
+    border: none;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #a611df, #8a0bc9);
+    box-shadow: 0 0 15px rgba(188, 19, 254, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--neon-cyan), #00c2cc);
+    border: none;
+    color: #000;
+    font-weight: 600;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #00dde6, #00aeb8);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+}
+
+/* Neon Utilities */
+.text-neon-cyan {
+    color: var(--neon-cyan) !important;
+}
+
+.text-neon-violet {
+    color: var(--neon-violet) !important;
+}
+
+.neon-text-cyan {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+}
+
+.neon-text-violet {
+    color: var(--neon-violet);
+    text-shadow: 0 0 10px rgba(188, 19, 254, 0.5);
+}
+
+.border-bottom-neon {
+    border-bottom: 1px solid var(--border-glass);
+    box-shadow: 0 1px 0 0 rgba(0, 243, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+/* Neon Buttons */
+.btn-neon-cyan {
+    background: linear-gradient(135deg, var(--neon-cyan), #00c2cc);
+    color: #0b0b0f;
+    border: none;
+    font-weight: 600;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-neon-cyan:hover {
+    background: linear-gradient(135deg, #00dde6, #00aeb8);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
+    transform: translateY(-2px);
+    color: #0b0b0f;
+}
+
+.btn-neon-violet {
+    background: linear-gradient(135deg, var(--neon-violet), #9c0ce6);
+    color: white;
+    border: 2px solid var(--neon-violet);
+    font-weight: 600;
+    box-shadow: 0 0 20px rgba(188, 19, 254, 0.5);
+    transition: all 0.3s ease;
+}
+
+.btn-neon-violet:hover {
+    background: linear-gradient(135deg, #c216ff, #a611df);
+    box-shadow: 0 0 30px rgba(188, 19, 254, 0.8);
+    transform: translateY(-2px);
+    color: white;
+    border-color: #c216ff;
+}
+
+.btn-outline-neon {
+    background: transparent;
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-neon:hover,
+.btn-check:checked+.btn-outline-neon {
+    background: rgba(0, 243, 255, 0.1);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+    color: #fff;
+    text-shadow: 0 0 5px rgba(0, 243, 255, 0.8);
+    border-color: var(--neon-cyan);
+}
+
+.btn-check:checked+.btn-outline-neon {
+    background: var(--neon-cyan);
+    color: #0b0b0f;
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+    font-weight: 700;
+}
+
+.btn-neon-cyan:disabled,
+.btn-neon-violet:disabled {
+    background: #333;
+    color: #666;
+    box-shadow: none;
+    cursor: not-allowed;
+    border: 1px solid #444;
+}

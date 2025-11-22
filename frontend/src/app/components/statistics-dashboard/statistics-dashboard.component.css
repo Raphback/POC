@@ -1,0 +1,89 @@
+/* Statistics Dashboard Styles */
+
+.stat-card {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 243, 255, 0.2);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-card-small {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.stat-value-small {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.stat-label-small {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.progress {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.bg-neon-cyan {
+    background: linear-gradient(90deg, var(--neon-cyan), #00c2cc);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+}
+
+.text-success {
+    color: #00ff88 !important;
+}
+
+.text-warning {
+    color: #ffaa00 !important;
+}
+
+.text-danger {
+    color: #ff3b30 !important;
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+}
+
+.table-dark {
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--border-glass);
+}
+
+.table-dark tbody tr:hover {
+    background: rgba(0, 243, 255, 0.05);
+}

@@ -1,0 +1,53 @@
+/* Voeu Form Styles */
+.card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    color: var(--text-main);
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+h2 {
+    margin-bottom: 2rem;
+    text-align: center;
+    font-weight: 700;
+    background: linear-gradient(90deg, #fff, #a0a0a0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.input-group .form-control {
+    border-right: none;
+}
+
+.input-group .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    z-index: 0;
+}
+
+.alert-info {
+    background-color: rgba(0, 243, 255, 0.1);
+    border: 1px solid rgba(0, 243, 255, 0.3);
+    color: var(--neon-cyan);
+    border-radius: 8px;
+}
+
+/* Select Dropdown Customization */
+select option {
+    background-color: #1a1a20;
+    /* Fallback for options */
+    color: white;
+}
+
+/* Hover Effects */
+.card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(188, 19, 254, 0.15);
+    transition: all 0.3s ease;
+}
