@@ -1,20 +1,80 @@
-# --- Angular ---
-/frontend/node_modules/
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Angular build output
 /frontend/dist/
 /frontend/.angular/
-/frontend/.vscode/
+/frontend/.tmp/
 
-# --- Java / Spring Boot ---
+# Maven build output
 /backend/target/
-/backend/.mvn/
-/backend/.vscode/
-/backend/bin/
-*.class
-*.log
-*.jar
+/backend/dependency-reduced-pom.xml
 
-# --- IDE & Système ---
-.DS_Store
+# Database files
+/backend/data/
+*.db
+*.h2.db
+
+# IDE files
 .idea/
-*.iml
 .vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+backend_init.log
+build_error.log
+
+# Environment files
+.env
+.env.local
+
+# Test files
+coverage/
+.nyc_output/
+
+# Gemini artifacts directory
+.gemini/
+
+# Temporary development files
+test-endpoints.ps1
+fetch_activities.ps1
+analyze_excel.py
+read_pdf.mjs
+read_docx.js
+
+# Screenshots and recordings (optional - uncomment if needed)
+# *.webp
+# *.png
+# *.jpg
+# *.mp4
+
+# Compiled TypeScript
+*.js.map
+
+# Java compiled files
+*.class
+
+# Package files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar

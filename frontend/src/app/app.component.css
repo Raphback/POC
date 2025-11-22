@@ -1,0 +1,25 @@
+/* App Component Styles */
+header {
+    background: rgba(11, 11, 15, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-glass);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+header a {
+    color: var(--text-main) !important;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-violet));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.container {
+    max-width: 900px;
+}

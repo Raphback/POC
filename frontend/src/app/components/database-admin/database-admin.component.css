@@ -1,0 +1,67 @@
+/* Database Admin Styles */
+
+.tabs-container {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border-glass);
+    padding-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: transparent;
+    border: 1px solid var(--border-glass);
+    color: var(--text-muted);
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.tab-btn:hover {
+    background: rgba(0, 243, 255, 0.05);
+    color: var(--neon-cyan);
+    border-color: var(--neon-cyan);
+}
+
+.tab-btn.active {
+    background: rgba(0, 243, 255, 0.1);
+    color: var(--neon-cyan);
+    border-color: var(--neon-cyan);
+    border-bottom-color: transparent;
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+}
+
+.stats-panel {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+}
+
+.glass-panel {
+    backdrop-filter: blur(10px);
+}
+
+.btn-outline-danger {
+    background: transparent;
+    border: 1px solid rgba(255, 59, 48, 0.5);
+    color: #ff3b30;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-danger:hover {
+    background: rgba(255, 59, 48, 0.1);
+    border-color: #ff3b30;
+    box-shadow: 0 0 10px rgba(255, 59, 48, 0.3);
+    color: #ff3b30;
+}
+
+.text-neon-cyan {
+    color: var(--neon-cyan);
+}
+
+.spinner-border.text-neon-cyan {
+    border-color: var(--neon-cyan);
+    border-right-color: transparent;
+}

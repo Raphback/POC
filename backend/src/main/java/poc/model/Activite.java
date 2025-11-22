@@ -15,4 +15,6 @@ public class Activite {
 
     @Enumerated(EnumType.STRING)
     private TypeActivite type;
+
+    private Integer nbPlaces; // Capacity (Jauge)
 }

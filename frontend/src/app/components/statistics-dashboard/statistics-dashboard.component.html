@@ -1,0 +1,170 @@
+<div class="container-fluid mt-4">
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="neon-text-violet mb-0">📊 Statistiques Globales</h2>
+            <button class="btn btn-neon-cyan" (click)="loadStatistics()">
+                🔄 Actualiser
+            </button>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="error" class="alert alert-danger">
+            {{ error }}
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="loading" class="text-center py-5">
+            <div class="spinner-border text-neon-cyan" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+
+        <!-- Statistics Content -->
+        <div *ngIf="!loading && statistics" class="row">
+            <!-- Global Counts -->
+            <div class="col-md-3 mb-4">
+                <div class="stat-card glass-panel p-3">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value text-neon-cyan">{{ statistics.totalEtudiants }}</div>
+                    <div class="stat-label">Étudiants</div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <div class="stat-card glass-panel p-3">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value text-neon-violet">{{ statistics.totalActivites }}</div>
+                    <div class="stat-label">Activités</div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <div class="stat-card glass-panel p-3">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-value text-neon-cyan">{{ statistics.totalVoeux }}</div>
+                    <div class="stat-label">Vœux</div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-4">
+                <div class="stat-card glass-panel p-3">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value text-neon-violet">{{ statistics.totalAffectations }}</div>
+                    <div class="stat-label">Affectations</div>
+                </div>
+            </div>
+
+            <!-- Satisfaction Rate -->
+            <div class="col-md-12 mb-4">
+                <div class="glass-panel p-4">
+                    <h5 class="text-neon-cyan mb-3">💯 Taux de Satisfaction</h5>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar bg-neon-cyan" role="progressbar"
+                            [style.width.%]="statistics.tauxSatisfaction"
+                            [attr.aria-valuenow]="statistics.tauxSatisfaction" aria-valuemin="0" aria-valuemax="100">
+                            {{ statistics.tauxSatisfaction | number:'1.1-1' }}%
+                        </div>
+                    </div>
+                    <p class="mt-2 text-muted">
+                        Pourcentage d'étudiants ayant obtenu au moins une affectation
+                    </p>
+                </div>
+            </div>
+
+            <!-- Students by Lycee -->
+            <div class="col-md-6 mb-4">
+                <div class="glass-panel p-4">
+                    <h5 class="text-neon-violet mb-3">🏫 Répartition par Lycée</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Lycée</th>
+                                    <th class="text-end">Étudiants</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let lycee of getObjectKeys(statistics.etudiantsParLycee)">
+                                    <td>{{ lycee }}</td>
+                                    <td class="text-end text-neon-cyan">{{ statistics.etudiantsParLycee[lycee] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students by Serie Bac -->
+            <div class="col-md-6 mb-4">
+                <div class="glass-panel p-4">
+                    <h5 class="text-neon-violet mb-3">🎓 Répartition par Série Bac</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Série</th>
+                                    <th class="text-end">Étudiants</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let serie of getObjectKeys(statistics.etudiantsParSerie)">
+                                    <td>{{ serie }}</td>
+                                    <td class="text-end text-neon-cyan">{{ statistics.etudiantsParSerie[serie] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students by Demi-Journee -->
+            <div class="col-md-12 mb-4">
+                <div class="glass-panel p-4">
+                    <h5 class="text-neon-violet mb-3">🕐 Répartition par Demi-Journée</h5>
+                    <div class="row">
+                        <div class="col-md-3" *ngFor="let dj of getObjectKeys(statistics.etudiantsParDemiJournee)">
+                            <div class="stat-card-small glass-panel p-3 text-center">
+                                <div class="stat-value-small text-neon-cyan">{{ statistics.etudiantsParDemiJournee[dj]
+                                    }}</div>
+                                <div class="stat-label-small">{{ dj }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Fill Rates -->
+            <div class="col-md-12 mb-4">
+                <div class="glass-panel p-4">
+                    <h5 class="text-neon-cyan mb-3">📈 Taux de Remplissage des Activités</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Activité</th>
+                                    <th class="text-end">Capacité</th>
+                                    <th class="text-end">Affectés</th>
+                                    <th class="text-end">Taux</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let activite of getObjectKeys(statistics.tauxRemplissageActivites)">
+                                    <td>{{ activite }}</td>
+                                    <td class="text-end">{{ statistics.tauxRemplissageActivites[activite].capacite }}
+                                    </td>
+                                    <td class="text-end text-neon-cyan">{{
+                                        statistics.tauxRemplissageActivites[activite].affectes }}</td>
+                                    <td class="text-end"
+                                        [ngClass]="getPercentageClass(statistics.tauxRemplissageActivites[activite].tauxRemplissage)">
+                                        {{ statistics.tauxRemplissageActivites[activite].tauxRemplissage |
+                                        number:'1.0-0' }}%
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,63 @@
+/* Glassmorphism & Neon Styles inherited from global styles.css */
+
+.glass-table {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-table th {
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--neon-cyan);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+}
+
+.glass-table td {
+    background: transparent;
+    color: #e0e0e0;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    vertical-align: middle;
+}
+
+.glass-table tr:hover td {
+    background: rgba(0, 243, 255, 0.05);
+    color: #fff;
+    box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.05);
+}
+
+/* Badge Tweaks */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 0.5em 0.8em;
+}
+
+.bg-secondary {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: #fff;
+}
+
+.bg-success {
+    background-color: rgba(0, 255, 136, 0.2) !important;
+    color: #00ff88;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.bg-info {
+    background-color: rgba(0, 243, 255, 0.2) !important;
+    color: #00f3ff;
+    border: 1px solid rgba(0, 243, 255, 0.3);
+}
+
+.bg-warning {
+    background-color: rgba(255, 183, 0, 0.2) !important;
+    color: #ffb700;
+    border: 1px solid rgba(255, 183, 0, 0.3);
+}
