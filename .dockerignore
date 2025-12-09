@@ -1,0 +1,14 @@
+.git/
+.gitignore
+*.md
+!DOCKER.md
+.idea/
+*.iml
+.DS_Store
+node_modules/
+dist/
+target/
+*.log
+*.txt
+Inputs/
+

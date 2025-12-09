@@ -16,13 +16,13 @@ Tout est configuré automatiquement dans votre répertoire utilisateur :
 
 **Terminal 1 - Backend** :
 ```powershell
-cd "c:\Users\ArthurLemarc_v4i1hl3\OneDrive - Noveo\Bureau\TSE\Semestre 9\POC\backend"
+cd "POC\backend"
 .\start-backend.ps1
 ```
 
 **Terminal 2 - Frontend** :
 ```powershell
-cd "c:\Users\ArthurLemarc_v4i1hl3\OneDrive - Noveo\Bureau\TSE\Semestre 9\POC\frontend"
+cd "POC\frontend"
 .\start-frontend.ps1
 ```
 

@@ -1,0 +1,60 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - git
+  - curl
+  - ca-certificates
+  - gnupg
+  - apt-transport-https
+
+write_files:
+  - path: /etc/systemd/system/poc-compose.service
+    permissions: "0644"
+    owner: root:root
+    content: |
+      [Unit]
+      Description=POC Stack (Docker Compose)
+      Wants=network-online.target
+      After=network-online.target docker.service
+      Requires=docker.service
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      WorkingDirectory=/opt/poc/POC
+      ExecStart=/usr/bin/docker compose up -d
+      ExecStop=/usr/bin/docker compose down
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # Install Docker Engine + Compose plugin
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/$(. /etc/os-release && echo "$ID") $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - systemctl enable --now docker
+
+  # Préparer les répertoires
+  - mkdir -p /opt/poc
+
+  # Récupérer le code
+  - cd /opt/poc
+  - if [ ! -d /opt/poc/POC ]; then git clone https://github.com/aa/POC.git POC; else cd /opt/poc/POC && git pull --rebase; fi
+
+  # Construire et lancer la stack
+  - cd /opt/poc/POC
+  - docker compose pull || true
+  - docker compose build
+  - docker compose up -d
+
+  # Activer le service systemd pour redémarrer au boot
+  - systemctl daemon-reload
+  - systemctl enable poc-compose.service
+
+final_message: "Cloud-init terminé. Stack POC démarrée si aucune erreur."
+
