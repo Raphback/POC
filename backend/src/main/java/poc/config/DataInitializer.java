@@ -14,12 +14,19 @@ import poc.repository.LyceeRepository;
 public class DataInitializer {
 
     @Bean
-    CommandLineRunner initDatabase(ActiviteRepository repository, LyceeRepository lyceeRepository) {
+    CommandLineRunner initDatabase(ActiviteRepository repository, LyceeRepository lyceeRepository, poc.repository.AdminRepository adminRepository) {
         return args -> {
             System.out.println("🔍 DataInitializer: Checking ActiviteRepository...");
             long count = repository.count();
             System.out.println("🔍 DataInitializer: Count = " + count);
             
+            // Initialize Admin
+            if (adminRepository.count() == 0) {
+                poc.model.Admin admin = new poc.model.Admin("admin", "admin", poc.model.Admin.Role.SUPER_ADMIN);
+                adminRepository.save(admin);
+                System.out.println("👮 Admin par défaut créé : admin / admin");
+            }
+
             if (count == 0) {
                 System.out.println("🚀 DataInitializer: Starting initialization...");
                 

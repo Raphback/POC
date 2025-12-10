@@ -76,7 +76,7 @@ public class PdfService {
         for (Affectation aff : affectations) {
             table.addCell(aff.getActivite().getType().toString());
             table.addCell(aff.getActivite().getTitre());
-            table.addCell("Salle X"); // Placeholder for Room
+            table.addCell(aff.getActivite().getSalle() != null ? aff.getActivite().getSalle() : "Non définie");
         }
 
         document.add(table);

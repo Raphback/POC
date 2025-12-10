@@ -3,11 +3,19 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="neon-text-violet mb-0">🗄️ Administration Base de Données</h2>
             <div>
-                <button class="btn btn-outline-neon me-2" (click)="exportData()">
-                    📥 Exporter CSV
+                <button class="btn btn-outline-neon me-2" [class.active]="viewMode === 'data'"
+                    (click)="switchView('data')">
+                    📋 Données
                 </button>
-                <button class="btn btn-neon-cyan" (click)="loadData()">
+                <button class="btn btn-outline-neon me-2" [class.active]="viewMode === 'stats'"
+                    (click)="switchView('stats')">
+                    📊 Statistiques
+                </button>
+                <button class="btn btn-neon-cyan" (click)="loadData()" *ngIf="viewMode === 'data'">
                     🔄 Actualiser
+                </button>
+                <button class="btn btn-neon-cyan" (click)="loadStats()" *ngIf="viewMode === 'stats'">
+                    🔄 Actualiser Stats
                 </button>
             </div>
         </div>
@@ -17,14 +25,6 @@
             {{ message }}
         </div>
 
-        <!-- Tabs -->
-        <div class="tabs-container mb-4">
-            <button *ngFor="let tab of tabs" class="tab-btn" [class.active]="activeTab === tab.name"
-                (click)="switchTab(tab.name)">
-                {{ tab.name | titlecase }}
-            </button>
-        </div>
-
         <!-- Loading -->
         <div *ngIf="loading" class="text-center py-5">
             <div class="spinner-border text-neon-cyan" role="status">
@@ -32,51 +32,206 @@
             </div>
         </div>
 
-        <!-- Data Table -->
-        <div *ngIf="!loading" class="table-responsive">
-            <table class="table table-dark table-hover glass-table">
-                <thead>
-                    <tr>
-                        <th *ngFor="let col of getActiveTabData().columns">{{ col }}</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let item of getActiveTabData().data">
-                        <td *ngFor="let col of getActiveTabData().columns">
-                            <ng-container [ngSwitch]="col">
-                                <span *ngSwitchCase="'lycee'">{{ item[col]?.nom }}</span>
-                                <span *ngSwitchCase="'etudiant'">{{ item[col]?.prenom }} {{ item[col]?.nom }}</span>
-                                <span *ngSwitchCase="'activite'">{{ item[col]?.titre }}</span>
-                                <span *ngSwitchDefault>{{ item[col] || '-' }}</span>
-                            </ng-container>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-danger" (click)="deleteItem(item.id)"
-                                *ngIf="activeTab !== 'voeux' && activeTab !== 'affectations'">
-                                🗑️
-                            </button>
-                        </td>
-                    </tr>
-                    <tr *ngIf="getActiveTabData().data.length === 0">
-                        <td [attr.colspan]="getActiveTabData().columns.length + 1" class="text-center text-muted">
-                            Aucune donnée disponible
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <!-- DATA VIEW -->
+        <div *ngIf="viewMode === 'data' && !loading">
+            <!-- Tabs -->
+            <div class="tabs-container mb-4">
+                <button *ngFor="let tab of tabs" class="tab-btn" [class.active]="activeTab === tab.name"
+                    (click)="switchTab(tab.name)">
+                    {{ tab.name | titlecase }}
+                </button>
+            </div>
 
-        <!-- Stats -->
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="stats-panel glass-panel p-3">
-                    <h5 class="text-neon-cyan mb-2">📊 Statistiques</h5>
-                    <p class="mb-0">
-                        <strong>Total :</strong> {{ getActiveTabData().data.length }} enregistrement(s)
-                    </p>
+            <div class="d-flex justify-content-end mb-3" *ngIf="activeTab !== 'algo'">
+                <button class="btn btn-sm btn-outline-neon" (click)="exportData()">
+                    📥 Exporter CSV (Table actuelle)
+                </button>
+            </div>
+
+            <!-- ALGO DASHBOARD VIEW -->
+            <div *ngIf="activeTab === 'algo'" class="text-center py-5 glass-panel">
+                <h3 class="neon-text-violet mb-4">🚀 Algorithme d'Affectation</h3>
+                <p class="text-light mb-4">
+                    Lancez l'algorithme pour répartir les étudiants dans les activités en fonction de leurs vœux.
+                </p>
+                <div class="d-flex justify-content-center gap-3 mb-5">
+                    <button class="btn btn-lg btn-neon-cyan" (click)="runAssignment()" [disabled]="loading">
+                        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                        Lancer l'Algorithme
+                    </button>
+                    <button class="btn btn-lg btn-neon-violet" (click)="downloadPdf()">
+                        📄 Exporter Convocations (PDF)
+                    </button>
+                </div>
+
+                <!-- Affectations Table -->
+                <div class="table-responsive text-start">
+                    <h4 class="text-neon-cyan mb-3">Résultats de l'affectation</h4>
+                    <table class="table table-dark table-hover glass-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Étudiant</th>
+                                <th scope="col">Activité</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Rang Vœu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let aff of affectationsList">
+                                <td>{{ aff.etudiant.prenom }} {{ aff.etudiant.nom }}</td>
+                                <td>{{ aff.activite.titre }} <small class="text-muted">({{ aff.activite.salle
+                                        }})</small></td>
+                                <td><span class="badge bg-secondary">{{ aff.activite.type }}</span></td>
+                                <td>
+                                    <span class="badge" [ngClass]="{
+                        'bg-success': aff.rangVoeu === 1,
+                        'bg-info': aff.rangVoeu === 2,
+                        'bg-warning': aff.rangVoeu > 2
+                      }">Vœu {{ aff.rangVoeu }}</span>
+                                </td>
+                            </tr>
+                            <tr *ngIf="affectationsList.length === 0">
+                                <td colspan="4" class="text-center text-muted">Aucune affectation pour le moment.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+
+            <!-- Data Table -->
+            <div class="table-responsive" *ngIf="activeTab !== 'algo'">
+                <table class="table table-dark table-hover glass-table">
+                    <thead>
+                        <tr>
+                            <th *ngFor="let col of getActiveTabData().columns">{{ col }}</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of getActiveTabData().data">
+                            <td *ngFor="let col of getActiveTabData().columns">
+                                <ng-container [ngSwitch]="col">
+                                    <span *ngSwitchCase="'lycee'">{{ item[col]?.nom }}</span>
+                                    <span *ngSwitchCase="'etudiant'">{{ item[col]?.prenom }} {{ item[col]?.nom }}</span>
+                                    <span *ngSwitchCase="'activite'">{{ item[col]?.titre }} <small
+                                            class="text-muted">({{ item[col]?.salle }})</small></span>
+                                    <span *ngSwitchDefault>{{ item[col] || '-' }}</span>
+                                </ng-container>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" (click)="deleteItem(item.id)"
+                                    *ngIf="activeTab !== 'voeux' && activeTab !== 'affectations'">
+                                    🗑️
+                                </button>
+                            </td>
+                        </tr>
+                        <tr *ngIf="getActiveTabData().data.length === 0">
+                            <td [attr.colspan]="getActiveTabData().columns.length + 1" class="text-center text-muted">
+                                Aucune donnée disponible
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- STATS VIEW -->
+        <div *ngIf="viewMode === 'stats' && !loading">
+
+            <div class="row mb-4">
+                <div class="col-md-12 text-end">
+                    <button class="btn btn-success btn-lg" (click)="exportWishes()">
+                        📥 Exporter Vœux par Activité (Excel)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Global Stats -->
+            <div class="row mb-4" *ngIf="statsGlobal">
+                <div class="col-md-4">
+                    <div class="glass-panel p-3 text-center">
+                        <h5 class="text-neon-cyan">Total Élèves</h5>
+                        <h2 class="text-light">{{ statsGlobal.total }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-panel p-3 text-center">
+                        <h5 class="text-neon-violet">Vœux Remplis</h5>
+                        <h2 class="text-light">{{ statsGlobal.filled }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-panel p-3 text-center">
+                        <h5 class="text-neon-pink">Participation</h5>
+                        <h2 class="text-light">{{ statsGlobal.percent | number:'1.0-1' }}%</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lycee Stats -->
+            <h4 class="text-neon-cyan mt-4 mb-3">🏫 Participation par Lycée</h4>
+            <div class="table-responsive mb-4">
+                <table class="table table-dark table-hover glass-table">
+                    <thead>
+                        <tr>
+                            <th>Lycée</th>
+                            <th>Total Élèves</th>
+                            <th>Vœux Remplis</th>
+                            <th>Participation (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let stat of statsLycee">
+                            <td>{{ stat.lycee }}</td>
+                            <td>{{ stat.total }}</td>
+                            <td>{{ stat.filled }}</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-neon-cyan" role="progressbar"
+                                        [style.width]="stat.percent + '%'" [attr.aria-valuenow]="stat.percent"
+                                        aria-valuemin="0" aria-valuemax="100">
+                                        {{ stat.percent | number:'1.0-1' }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Classe Stats -->
+            <h4 class="text-neon-violet mt-4 mb-3">🎓 Participation par Classe</h4>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover glass-table">
+                    <thead>
+                        <tr>
+                            <th>Lycée</th>
+                            <th>Classe</th>
+                            <th>Total Élèves</th>
+                            <th>Vœux Remplis</th>
+                            <th>Participation (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let stat of statsClasse">
+                            <td>{{ stat.lycee }}</td>
+                            <td>{{ stat.classe }}</td>
+                            <td>{{ stat.total }}</td>
+                            <td>{{ stat.filled }}</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-neon-violet" role="progressbar"
+                                        [style.width]="stat.percent + '%'" [attr.aria-valuenow]="stat.percent"
+                                        aria-valuemin="0" aria-valuemax="100">
+                                        {{ stat.percent | number:'1.0-1' }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </div>
