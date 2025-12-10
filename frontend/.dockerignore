@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.angular/
+*.log
+.idea/
+*.iml
+.DS_Store
+start-frontend.ps1
+doc.pdf
+pdf_output.txt
+read_pdf*.js
+

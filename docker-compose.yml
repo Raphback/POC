@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: poc/backend:latest
+    container_name: poc-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_ADDRESS: 0.0.0.0
+      TZ: Europe/Paris
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend-data:/app/data
+    networks:
+      - poc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: poc/frontend:latest
+    container_name: poc-frontend
+    environment:
+      TZ: Europe/Paris
+    ports:
+      - "4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - poc-network
+    restart: unless-stopped
+
+volumes:
+  backend-data:
+    driver: local
+
+networks:
+  poc-network:
+    driver: bridge
+

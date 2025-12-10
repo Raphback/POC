@@ -1,0 +1,12 @@
+target/
+.mvn/
+*.log
+*.txt
+data/
+.idea/
+*.iml
+.DS_Store
+mvnw.cmd
+mvnw
+start-backend.ps1
+
