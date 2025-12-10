@@ -19,7 +19,7 @@ export class DatabaseAdminComponent implements OnInit {
 
     tabs: TabData[] = [
         { name: 'etudiants', data: [], columns: ['id', 'matriculeCsv', 'nom', 'prenom', 'lycee', 'classe', 'serieBac', 'demiJournee'] },
-        { name: 'activites', data: [], columns: ['id', 'titre', 'type', 'nbPlaces'] },
+        { name: 'activites', data: [], columns: ['id', 'titre', 'type', 'nbPlaces', 'salle'] },
         { name: 'lycees', data: [], columns: ['id', 'nom'] },
         { name: 'voeux', data: [], columns: ['id', 'etudiant', 'activite', 'rang'] },
         { name: 'affectations', data: [], columns: ['id', 'etudiant', 'activite', 'rangVoeu'] }
@@ -114,7 +114,19 @@ export class DatabaseAdminComponent implements OnInit {
         const header = columns.join(';');
         const rows = data.map(item => {
             return columns.map(col => {
-                const value = this.getNestedValue(item, col);
+                let value = this.getNestedValue(item, col);
+
+                // Handle objects (Etudiant, Activite, Lycee)
+                if (value && typeof value === 'object') {
+                    if (value.nom && value.prenom) {
+                        value = `${value.prenom} ${value.nom}`;
+                    } else if (value.titre) {
+                        value = value.titre;
+                    } else if (value.nom) {
+                        value = value.nom;
+                    }
+                }
+
                 // Escape quotes and wrap in quotes if value contains delimiter or quotes
                 const stringValue = String(value || '');
                 if (stringValue.includes(';') || stringValue.includes('"') || stringValue.includes('\n')) {

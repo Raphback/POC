@@ -10,9 +10,6 @@ import poc.repository.ActiviteRepository;
 import poc.model.Lycee;
 import poc.repository.LyceeRepository;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Configuration
 public class DataInitializer {
 
@@ -32,7 +29,8 @@ public class DataInitializer {
                 lyceeRepository.save(lycee);
                 System.out.println("🏫 Lycée créé : " + lycee.getNom());
 
-                // Conférences
+                // Conférences - DISABLED (Imported from Excel now)
+                /*
                 repository.save(createActivite("Etudes et métiers des arts, de la culture et du design", TypeActivite.CONFERENCE, 30));
                 repository.save(createActivite("Sciences et techniques", TypeActivite.CONFERENCE, 30));
                 repository.save(createActivite("Licence CPGE", TypeActivite.CONFERENCE, 30));
@@ -61,6 +59,7 @@ public class DataInitializer {
                 repository.save(createActivite("Table ronde: Les métiers de demain", TypeActivite.TABLE_RONDE, 25));
                 repository.save(createActivite("Table ronde: L'alternance", TypeActivite.TABLE_RONDE, 25));
                 repository.save(createActivite("Table ronde: La vie étudiante", TypeActivite.TABLE_RONDE, 25));
+                */
 
                 System.out.println("Base de données initialisée avec succès !");
             }

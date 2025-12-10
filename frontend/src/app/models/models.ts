@@ -7,6 +7,7 @@ export interface Activite {
     id: number;
     titre: string;
     type: 'CONFERENCE' | 'TABLE_RONDE' | 'FLASH_METIER';
+    salle?: string;
 }
 
 export interface Etudiant {
