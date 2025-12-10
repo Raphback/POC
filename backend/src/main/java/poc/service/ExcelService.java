@@ -33,6 +33,9 @@ public class ExcelService {
 
         for (File file : files) {
             if (file.getName().endsWith(".xlsx") || file.getName().endsWith(".xls")) {
+                // Skip activities file
+                if (file.getName().equalsIgnoreCase("capacites.xlsx")) continue;
+
                 System.out.println("📂 Importing: " + file.getName());
                 try (FileInputStream fis = new FileInputStream(file);
                      Workbook workbook = WorkbookFactory.create(fis)) {
@@ -136,48 +139,195 @@ public class ExcelService {
             return;
         }
 
-        System.out.println("📂 Importing Activities from: " + file.getName());
+        System.out.println("📂 Importing Activities (Mapping Titles to Rooms)...");
         DataFormatter formatter = new DataFormatter();
+
+        // 1. Load all rooms from Excel
+        java.util.List<String> amphis = new java.util.ArrayList<>();
+        java.util.List<String> tds = new java.util.ArrayList<>();
+        Map<String, Integer> roomCapacities = new HashMap<>();
 
         try (FileInputStream fis = new FileInputStream(file);
              Workbook workbook = WorkbookFactory.create(fis)) {
             
             Sheet sheet = workbook.getSheetAt(0);
-            int count = 0;
             for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue; // Skip header
+                if (row.getRowNum() == 0) continue;
 
-                String titre = formatter.formatCellValue(row.getCell(0)).trim();
-                String salle = formatter.formatCellValue(row.getCell(1)).trim();
-                String capStr = formatter.formatCellValue(row.getCell(2)).trim();
-
-                if (titre.isEmpty()) continue;
-
-                poc.model.Activite activite = new poc.model.Activite();
-                activite.setTitre(titre);
-                activite.setSalle(salle);
+                String salle = formatter.formatCellValue(row.getCell(0)).trim();
+                String type = formatter.formatCellValue(row.getCell(2)).trim();
+                String capStr = formatter.formatCellValue(row.getCell(3)).trim();
                 
-                if (titre.toLowerCase().contains("conférence")) {
-                    activite.setType(poc.model.TypeActivite.CONFERENCE);
-                } else if (titre.toLowerCase().contains("table ronde")) {
-                    activite.setType(poc.model.TypeActivite.TABLE_RONDE);
+                if (salle.isEmpty()) continue;
+
+                int cap = 30;
+                try { cap = Integer.parseInt(capStr); } catch (Exception e) {}
+                roomCapacities.put(salle, cap);
+
+                if (type.toLowerCase().contains("amphi")) {
+                    amphis.add(salle);
                 } else {
-                    activite.setType(poc.model.TypeActivite.FLASH_METIER);
+                    tds.add(salle);
                 }
-
-                try {
-                    activite.setNbPlaces(Integer.parseInt(capStr));
-                } catch (NumberFormatException e) {
-                    activite.setNbPlaces(30);
-                }
-
-                activiteRepository.save(activite);
-                count++;
             }
-            System.out.println("   ✅ Imported " + count + " activities.");
-
         } catch (Exception e) {
-            System.err.println("Error importing activities: " + e.getMessage());
+            System.err.println("Error reading rooms: " + e.getMessage());
+            return;
+        }
+
+        // 2. Define Titles (Hardcoded from DOCX)
+        String[] conferences = {
+            "Etudes et métiers des arts, de la culture et du design",
+            "Etudes et métiers du commerce",
+            "Les études médicales",
+            "Management économie gestion Licences CPGE",
+            "Sciences et innovations technologiques BTS BUT",
+            "Sociologie, sciences de l’éducation, histoire géographie Licences CPGE",
+            "Etudes et métiers de l’informatique et du numérique",
+            "Etudes et métiers du droit - Science Po",
+            "Etudes et métiers du soin et de la santé",
+            "Etudes et métiers du tourisme et de l’hôtellerie BTS",
+            "Etudes et métiers de l'habitat et de la construction",
+            "Sciences et techniques Licence CPGE",
+            "Etudes et métiers de l’ingénieur",
+            "Etudes et métiers du management, économie, gestion (BTS/BUT)",
+            "Etudes et métiers du secteur social",
+            "Etudes et métiers du sport",
+            "Lettres et langues Licences CPGE",
+            "Sciences de la vie, de l’environnement et de l’agronomie BTS BUT",
+            "Etre étudiant _ Parcoursup"
+        };
+
+        String[] others = {
+            "Table ronde Etre étudiant en BTS (animation par des étudiants)",
+            "Table ronde Etre étudiant en BUT (animation par des étudiants)",
+            "Table ronde Etre étudiant en prépa CPI ou CPGE (animation par des étudiants)",
+            "Table ronde Etre alternant dans l'enseignement supérieur (animation par des étudiants)",
+            "Table ronde Etre étudiant en Licences (animation par des étudiants)",
+            "Table ronde: flash métier \"ingénieur\" (animation par des professionnels)",
+            "Table ronde: flash métier \"social\" (animation par des professionnels)",
+            "Table ronde: flash métier \"commerce\" (animation par des professionnels)",
+            "Table ronde: flash métier \"sport\" (animation par des professionnels)",
+            "Table ronde: flash métier \"paramédical\" (animation par des professionnels)",
+            "Table ronde: flash métier \"design / architecture\" (animation par des professionnels)"
+        };
+
+        // 3. Create Activities
+        int amphiIndex = 0;
+        int tdIndex = 0;
+
+        // Conferences -> Amphis
+        for (String title : conferences) {
+            poc.model.Activite a = new poc.model.Activite();
+            a.setTitre("Conférence " + title);
+            a.setType(poc.model.TypeActivite.CONFERENCE);
+            
+            // Assign room (cycle if not enough)
+            String salle = "Salle indéfinie";
+            if (!amphis.isEmpty()) {
+                salle = amphis.get(amphiIndex % amphis.size());
+                amphiIndex++;
+            } else if (!tds.isEmpty()) {
+                 salle = tds.get(amphiIndex % tds.size()); // Fallback to TDs
+                 amphiIndex++;
+            }
+            a.setSalle(salle);
+            a.setNbPlaces(roomCapacities.getOrDefault(salle, 30));
+            activiteRepository.save(a);
+        }
+
+        // Others -> TDs
+        for (String title : others) {
+            poc.model.Activite a = new poc.model.Activite();
+            a.setTitre(title);
+            
+            if (title.toLowerCase().contains("flash")) {
+                a.setType(poc.model.TypeActivite.FLASH_METIER);
+            } else {
+                a.setType(poc.model.TypeActivite.TABLE_RONDE);
+            }
+
+            // Assign room
+            String salle = "Salle indéfinie";
+            if (!tds.isEmpty()) {
+                salle = tds.get(tdIndex % tds.size());
+                tdIndex++;
+            } else if (!amphis.isEmpty()) {
+                salle = amphis.get(tdIndex % amphis.size()); // Fallback
+                tdIndex++;
+            }
+            a.setSalle(salle);
+            a.setNbPlaces(roomCapacities.getOrDefault(salle, 30));
+            activiteRepository.save(a);
+        }
+
+        System.out.println("   ✅ Imported " + (conferences.length + others.length) + " activities with correct titles.");
+    }
+    public byte[] generateWishesExport(java.util.List<poc.model.Activite> activites, java.util.List<poc.model.Voeu> voeux) {
+        try (Workbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
+             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+
+            Map<Long, java.util.List<poc.model.Voeu>> voeuxByActivite = new HashMap<>();
+            for (poc.model.Voeu v : voeux) {
+                voeuxByActivite.computeIfAbsent(v.getActivite().getId(), k -> new java.util.ArrayList<>()).add(v);
+            }
+
+            for (poc.model.Activite activite : activites) {
+                // Sanitize sheet name (max 31 chars, no special chars)
+                String sheetName = activite.getTitre().replaceAll("[^a-zA-Z0-9 ]", "").trim();
+                if (sheetName.length() > 30) sheetName = sheetName.substring(0, 30);
+                if (sheetName.isEmpty()) sheetName = "Activite " + activite.getId();
+                
+                // Ensure unique sheet names
+                int suffix = 1;
+                String originalName = sheetName;
+                while (workbook.getSheet(sheetName) != null) {
+                    sheetName = originalName + " " + suffix++;
+                }
+
+                Sheet sheet = workbook.createSheet(sheetName);
+
+                // Header
+                Row headerInfo = sheet.createRow(0);
+                headerInfo.createCell(0).setCellValue("Activité : " + activite.getTitre());
+                headerInfo.createCell(3).setCellValue("Salle : " + activite.getSalle());
+                headerInfo.createCell(5).setCellValue("Capacité : " + activite.getNbPlaces());
+
+                Row header = sheet.createRow(1);
+                header.createCell(0).setCellValue("Matricule");
+                header.createCell(1).setCellValue("Nom");
+                header.createCell(2).setCellValue("Prénom");
+                header.createCell(3).setCellValue("Lycée");
+                header.createCell(4).setCellValue("Classe");
+                header.createCell(5).setCellValue("Demi-journée");
+                header.createCell(6).setCellValue("Voeu N°");
+
+                java.util.List<poc.model.Voeu> activityVoeux = voeuxByActivite.getOrDefault(activite.getId(), java.util.Collections.emptyList());
+                
+                int rowIdx = 2;
+                for (poc.model.Voeu v : activityVoeux) {
+                    Row row = sheet.createRow(rowIdx++);
+                    Etudiant e = v.getEtudiant();
+                    row.createCell(0).setCellValue(e.getMatriculeCsv());
+                    row.createCell(1).setCellValue(e.getNom());
+                    row.createCell(2).setCellValue(e.getPrenom());
+                    row.createCell(3).setCellValue(e.getLycee() != null ? e.getLycee().getNom() : "");
+                    row.createCell(4).setCellValue(e.getClasse());
+                    row.createCell(5).setCellValue(e.getDemiJournee());
+                    row.createCell(6).setCellValue(v.getPriorite());
+                }
+                
+                // Auto-size columns
+                for (int i = 0; i < 7; i++) {
+                    sheet.autoSizeColumn(i);
+                }
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }

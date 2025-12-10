@@ -34,67 +34,46 @@
             <label class="form-label text-light">Vœu 1 (Conférence)</label>
             <select class="form-select glass-input" formControlName="voeu1">
               <option value="">Choisir une conférence...</option>
-              <option *ngFor="let conf of conferences" [value]="conf.id">{{ conf.titre }}</option>
+              <option *ngFor="let conf of getAvailableConferences('voeu1')" [value]="conf.id">{{ conf.titre }}</option>
             </select>
           </div>
           <div class="col-md-6">
             <label class="form-label text-light">Vœu 2 (Conférence)</label>
             <select class="form-select glass-input" formControlName="voeu2">
               <option value="">Choisir une conférence...</option>
-              <option *ngFor="let conf of conferences" [value]="conf.id">{{ conf.titre }}</option>
+              <option *ngFor="let conf of getAvailableConferences('voeu2')" [value]="conf.id">{{ conf.titre }}</option>
             </select>
           </div>
         </div>
 
         <!-- Voeux 3, 4, 5: Parcours Découverte -->
         <h4 class="text-light mb-3 border-bottom-neon">2. Parcours Découverte</h4>
-        <div class="mb-3">
-          <label class="form-label text-light d-block">Choisissez votre Option :</label>
-          <div class="btn-group" role="group">
-            <input type="radio" class="btn-check" name="option" id="optA" value="A" formControlName="option"
-              (change)="onOptionChange('A')">
-            <label class="btn btn-outline-neon" for="optA">Option A</label>
 
-            <input type="radio" class="btn-check" name="option" id="optB" value="B" formControlName="option"
-              (change)="onOptionChange('B')">
-            <label class="btn btn-outline-neon" for="optB">Option B</label>
-
-            <input type="radio" class="btn-check" name="option" id="optC" value="C" formControlName="option"
-              (change)="onOptionChange('C')">
-            <label class="btn btn-outline-neon" for="optC">Option C</label>
-
-            <input type="radio" class="btn-check" name="option" id="optD" value="D" formControlName="option"
-              (change)="onOptionChange('D')">
-            <label class="btn btn-outline-neon" for="optD">Option D</label>
-          </div>
-        </div>
-
-        <!-- Dynamic Fields based on Option -->
-        <div *ngIf="selectedOption" class="glass-panel p-3 mb-4">
-          <h5 class="text-neon-violet mb-3">Détails de l'Option {{ selectedOption }}</h5>
-
-          <!-- Example Logic: Option A = 1 Conf + 1 TR + 1 Flash -->
-          <!-- Ideally this logic should be more dynamic based on real rules -->
+        <div class="glass-panel p-3 mb-4">
+          <h5 class="text-neon-violet mb-3">Vos autres choix</h5>
 
           <div class="mb-2">
             <label class="form-label text-light">Vœu 3</label>
             <select class="form-select glass-input" formControlName="voeu3">
               <option value="">Choisir...</option>
-              <option *ngFor="let act of activites" [value]="act.id">{{ act.titre }} ({{ act.type }})</option>
+              <option *ngFor="let act of getAvailableActivities('voeu3')" [value]="act.id">{{ act.titre }} ({{ act.type
+                }})</option>
             </select>
           </div>
           <div class="mb-2">
             <label class="form-label text-light">Vœu 4</label>
             <select class="form-select glass-input" formControlName="voeu4">
               <option value="">Choisir...</option>
-              <option *ngFor="let act of activites" [value]="act.id">{{ act.titre }} ({{ act.type }})</option>
+              <option *ngFor="let act of getAvailableActivities('voeu4')" [value]="act.id">{{ act.titre }} ({{ act.type
+                }})</option>
             </select>
           </div>
           <div class="mb-2">
             <label class="form-label text-light">Vœu 5</label>
             <select class="form-select glass-input" formControlName="voeu5">
               <option value="">Choisir...</option>
-              <option *ngFor="let act of activites" [value]="act.id">{{ act.titre }} ({{ act.type }})</option>
+              <option *ngFor="let act of getAvailableActivities('voeu5')" [value]="act.id">{{ act.titre }} ({{ act.type
+                }})</option>
             </select>
           </div>
         </div>

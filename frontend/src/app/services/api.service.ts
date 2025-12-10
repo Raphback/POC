@@ -24,9 +24,31 @@ export class ApiService {
     );
   }
 
+  loginAdmin(username: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/login/admin`, { username, password }).pipe(
+      tap((response: any) => {
+        if (response && response.token) {
+          localStorage.setItem('token', response.token);
+          localStorage.setItem('admin', JSON.stringify({ username: response.username, role: response.role }));
+          localStorage.removeItem('user'); // Clear student user if any
+        }
+      })
+    );
+  }
+
+  isAdmin(): boolean {
+    return !!localStorage.getItem('admin');
+  }
+
+  getAdminRole(): string | null {
+    const admin = localStorage.getItem('admin');
+    return admin ? JSON.parse(admin).role : null;
+  }
+
   logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('admin');
   }
 
   getToken(): string | null {
@@ -80,6 +102,27 @@ export class ApiService {
   exportPdf(): Observable<Blob> {
     const headers = this.getAuthHeaders();
     return this.http.get(`${this.apiUrl}/admin/export/pdf`, { headers, responseType: 'blob' });
+  }
+
+  // Stats & Exports
+  getGlobalStats(): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.get(`${this.apiUrl}/stats/global`, { headers });
+  }
+
+  getLyceeStats(): Observable<any[]> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<any[]>(`${this.apiUrl}/stats/lycee`, { headers });
+  }
+
+  getClasseStats(): Observable<any[]> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<any[]>(`${this.apiUrl}/stats/classe`, { headers });
+  }
+
+  exportWishes(): Observable<Blob> {
+    const headers = this.getAuthHeaders();
+    return this.http.get(`${this.apiUrl}/stats/export`, { headers, responseType: 'blob' });
   }
 
   // Generic methods for database admin

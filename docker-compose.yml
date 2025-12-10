@@ -15,6 +15,7 @@ services:
       - "8080:8080"
     volumes:
       - backend-data:/app/data
+      - ./Inputs:/Inputs
     networks:
       - poc-network
     restart: unless-stopped

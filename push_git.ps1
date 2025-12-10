@@ -65,7 +65,7 @@ git remote -v
 
 # Check if we need to commit
 git add .
-git commit -m "Auto-commit: FESUP 2026 update"
+git commit -m "Feat: Admin Algo tab, PDF export fix, Room display"
 
 # Check if remote exists
 $remotes = git remote

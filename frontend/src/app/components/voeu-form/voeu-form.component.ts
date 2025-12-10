@@ -32,11 +32,9 @@ export class VoeuFormComponent implements OnInit {
       matricule: ['', Validators.required],
       voeu1: ['', Validators.required],
       voeu2: ['', Validators.required],
-      option: ['', Validators.required],
-      // Dynamic fields for Voeux 3, 4, 5 will be handled manually or via form array
-      voeu3: [''],
-      voeu4: [''],
-      voeu5: ['']
+      voeu3: ['', Validators.required],
+      voeu4: ['', Validators.required],
+      voeu5: ['', Validators.required]
     });
   }
 
@@ -94,43 +92,71 @@ export class VoeuFormComponent implements OnInit {
     }
   }
 
-  onOptionChange(opt: string): void {
-    this.selectedOption = opt;
-    // Reset Voeux 3, 4, 5
-    this.voeuForm.patchValue({ voeu3: '', voeu4: '', voeu5: '' });
+  getAvailableConferences(currentField: string): Activite[] {
+    const selectedIds = this.getSelectedIds(currentField);
+    return this.conferences.filter(c => !selectedIds.includes(c.id));
+  }
+
+  getAvailableActivities(currentField: string): Activite[] {
+    const selectedIds = this.getSelectedIds(currentField);
+    return this.activites.filter(a => !selectedIds.includes(a.id));
+  }
+
+  private getSelectedIds(excludeField: string): number[] {
+    const values: any = this.voeuForm.value;
+    const ids: number[] = [];
+
+    Object.keys(values).forEach(key => {
+      if (key !== excludeField && key.startsWith('voeu') && values[key]) {
+        ids.push(parseInt(values[key]));
+      }
+    });
+    return ids;
   }
 
   onSubmit(): void {
     if (this.voeuForm.valid && this.etudiant) {
-      // Basic validation: V1 != V2
-      if (this.voeuForm.value.voeu1 === this.voeuForm.value.voeu2) {
-        this.errorMessage = 'Les vœux 1 et 2 doivent être différents.';
+      const v1 = this.voeuForm.value.voeu1;
+      const v2 = this.voeuForm.value.voeu2;
+      const v3 = this.voeuForm.value.voeu3;
+      const v4 = this.voeuForm.value.voeu4;
+      const v5 = this.voeuForm.value.voeu5;
+
+      const allWishes = [v1, v2, v3, v4, v5];
+
+      // 1. Check for duplicates (Double check, though UI should prevent it)
+      const uniqueWishes = new Set(allWishes);
+      if (uniqueWishes.size !== allWishes.length) {
+        alert('⚠️ Attention : Vous avez sélectionné plusieurs fois la même activité.\nVeuillez choisir des activités différentes pour chaque vœu.');
         return;
       }
-      const activitesIds = [
-        this.voeuForm.value.voeu1,
-        this.voeuForm.value.voeu2,
-        this.voeuForm.value.voeu3,
-        this.voeuForm.value.voeu4,
-        this.voeuForm.value.voeu5
-      ].filter(id => id); // Remove empty
 
-      // Récupérer les objets activités complets pour l'affichage
-      const selectedActivites = activitesIds.map(id => {
-        return this.activites.find(a => a.id === parseInt(id));
-      }).filter(a => a); // Retirer les undefined
+      // 2. Check for at least one conference in 3, 4, 5
+      // Retrieve activity objects to check types
+      const act3 = this.activites.find(a => a.id == v3);
+      const act4 = this.activites.find(a => a.id == v4);
+      const act5 = this.activites.find(a => a.id == v5);
 
-      // Convertir les IDs en nombres pour l'API
-      const numericIds = activitesIds.map(id => parseInt(id));
+      const hasConfInDiscovery = (act3?.type === 'CONFERENCE') || (act4?.type === 'CONFERENCE') || (act5?.type === 'CONFERENCE');
+
+      if (!hasConfInDiscovery) {
+        alert('⚠️ Attention : Vous devez choisir au moins une CONFÉRENCE dans vos vœux 3, 4 ou 5.');
+        return;
+      }
+
+      // Prepare data for API
+      const numericIds = allWishes.map(id => parseInt(id));
+
+      // Retrieve full objects for confirmation page
+      const selectedActivites = numericIds.map(id => this.activites.find(a => a.id === id)).filter(a => a);
 
       this.apiService.saveVoeux(this.etudiant.id, numericIds).subscribe({
         next: () => {
-          // Navigation vers la page de confirmation avec les données
+          // Navigation vers la page de confirmation
           this.router.navigate(['/confirmation'], {
             state: {
               etudiant: this.etudiant,
-              voeux: selectedActivites,
-              option: this.selectedOption
+              voeux: selectedActivites
             }
           });
         },
