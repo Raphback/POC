@@ -23,8 +23,8 @@ public class StudentInitializer {
             activiteRepository.deleteAll(); // Clean activities too
             
             System.out.println("🚀 Starting Import from Excel...");
-            excelService.importActivities("../Inputs", activiteRepository);
-            excelService.importStudents("../Inputs", etudiantRepository, lyceeRepository);
+            excelService.importActivities("/Inputs", activiteRepository);
+            excelService.importStudents("/Inputs", etudiantRepository, lyceeRepository);
             
             System.out.println("✅ Student Import Completed.");
             System.out.println("📊 Total Students: " + etudiantRepository.count());

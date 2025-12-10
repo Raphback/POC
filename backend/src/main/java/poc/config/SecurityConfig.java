@@ -30,8 +30,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/**").permitAll()
                 .anyRequest().permitAll()
             );
-            // Use HTTP Basic authentication for any other endpoints
-            // .httpBasic(Customizer.withDefaults()); // Disabled to avoid browser auth pop‑up
+        // Use HTTP Basic authentication for any other endpoints
+        // .httpBasic(Customizer.withDefaults()); // Disabled to avoid browser auth pop-up
         return http.build();
     }
 
