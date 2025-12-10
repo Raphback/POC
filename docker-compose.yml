@@ -19,12 +19,6 @@ services:
     networks:
       - poc-network
     restart: unless-stopped
-    healthcheck:
-      test: "curl -f http://127.0.0.1:8080/actuator/health || exit 1"
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   frontend:
     build:
@@ -35,6 +29,7 @@ services:
     environment:
       TZ: Europe/Paris
     ports:
+      - "4200:80"
     networks:
       - poc-network
     restart: unless-stopped
