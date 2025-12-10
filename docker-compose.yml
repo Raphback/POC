@@ -20,7 +20,7 @@ services:
       - poc-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health || exit 1"]
+      test: "curl -f http://localhost:8080/actuator/health || exit 1"
       interval: 30s
       timeout: 10s
       retries: 3
@@ -49,4 +49,3 @@ volumes:
 networks:
   poc-network:
     driver: bridge
-
