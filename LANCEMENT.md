@@ -1,97 +1,57 @@
 # 🚀 Guide de Démarrage - POC FESUP 2026
 
-## ✅ Installation Terminée !
+Ce document explique comment lancer l'application complète (Backend + Frontend).
 
-Tout est configuré automatiquement dans votre répertoire utilisateur :
-- ☕ **Java 17** : `C:\Users\ArthurLemarc_v4i1hl3\.java\jdk-17.0.2`
-- 📦 **Maven 3.9.5** : `C:\Users\ArthurLemarc_v4i1hl3\.maven\apache-maven-3.9.5`  
-- 🗄️ **Base de données H2** : Embarquée (aucune installation)
-- 🅰️ **Angular CLI** : Installé via npm
+## 1. Pré-requis
 
----
+-   **Java 17** ou supérieur.
+-   **Node.js** (v20 recommandé).
+-   **Maven**.
+-   **Git** (optionnel pour le lancement, requis pour le versionning).
 
-## 🎯 Démarrage Rapide
+## 2. Lancement Automatisé (Recommandé)
 
-### Option 1 : Utiliser les scripts automatiques
+Des scripts PowerShell sont fournis pour simplifier le démarrage.
 
-**Terminal 1 - Backend** :
+### Étape 1 : Démarrer le Backend (Serveur)
+Ouvrez un terminal (PowerShell) dans le dossier `backend` et exécutez :
+
 ```powershell
-cd "c:\Users\ArthurLemarc_v4i1hl3\OneDrive - Noveo\Bureau\TSE\Semestre 9\POC\backend"
+cd backend
 .\start-backend.ps1
 ```
 
-**Terminal 2 - Frontend** :
+> **Note** : Le serveur démarre sur le port **8080**. Les logs s'affichent dans `backend/backend.log`.
+> Attendez de voir "Started PocApplication" dans les logs ou que la fenêtre ne signale pas d'erreur immédiate.
+
+### Étape 2 : Démarrer le Frontend (Interface)
+Ouvrez un **nouveau** terminal dans le dossier `frontend` et exécutez :
+
 ```powershell
-cd "c:\Users\ArthurLemarc_v4i1hl3\OneDrive - Noveo\Bureau\TSE\Semestre 9\POC\frontend"
+cd frontend
 .\start-frontend.ps1
 ```
 
-### Option 2 : Commandes manuelles
+> **Note** : L'application sera accessible sur **http://localhost:4200**.
 
-**Backend** :
-```powershell
-cd backend
-$env:JAVA_HOME = "$env:USERPROFILE\.java\jdk-17.0.2"
-$env:M2_HOME = "$env:USERPROFILE\.maven\apache-maven-3.9.5"
-$env:PATH = "$env:JAVA_HOME\bin;$env:M2_HOME\bin;$env:PATH"
-mvn spring-boot:run
-```
+## 3. Accès à l'Application
 
-**Frontend** :
-```powershell
-cd frontend
-npm start
-```
+-   **Interface Utilisateur** : [http://localhost:4200](http://localhost:4200)
+-   **Base de Données (Console H2)** : [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
+    -   JDBC URL : `jdbc:h2:file:./data/fesup_db`
+    -   User : `sa`
+    -   Password : (vide)
 
----
+## 4. Dépannage
 
-## 🌐 Accès aux Applications
+-   **Port 8080 ou 4200 déjà utilisé ?**
+    -   Fermez les terminaux ouverts.
+    -   Forcez l'arrêt des processus Java/Node :
+        ```powershell
+        Stop-Process -Name "java" -Force -ErrorAction SilentlyContinue
+        Stop-Process -Name "node" -Force -ErrorAction SilentlyContinue
+        ```
 
-- **Frontend** : http://localhost:4200
-- **Backend API** : http://localhost:8080
-- **Console H2** (Base de données) : http://localhost:8080/h2-console
-  - JDBC URL : `jdbc:h2:file:./data/fesup_db`
-  - Username : `sa`
-  - Password : (vide)
-
----
-
-## 🧪 Test du Parcours Complet
-
-1. **Ouvrir** : http://localhost:4200
-2. **Se connecter** avec l'étudiant de test :
-   - **Matricule** : `12345`
-   - **Nom** : `Doe`
-3. **Saisir les vœux** (Conférences + Options)
-4. **Admin Dashboard** : http://localhost:4200/admin
-5. **Lancer l'algorithme** d'affectation
-6. **Télécharger le PDF** des convocations
-
----
-
-## 🔧 Dépannage
-
-### "mvn n'est pas reconnu"
-Relancez le script `start-backend.ps1` qui configure automatiquement les variables d'environnement.
-
-### "Port 4200 déjà utilisé"
-Arrêtez les anciens serveurs : `Stop-Process -Name "node" -Force`
-
-### "javac n'est pas reconnu"
-Vérifiez que Java est bien installé : 
-```powershell
-$env:JAVA_HOME = "$env:USERPROFILE\.java\jdk-17.0.2"
-java -version
-```
-
----
-
-## 📊 Structure de la Base de Données
-
-H2 stocke les données dans : `backend/data/fesup_db.mv.db`
-
-Les données persistent entre les redémarrages !
-
----
-
-Bon coding ! 🎓
+-   **Les données ne s'affichent pas ?**
+    -   Vérifiez que les fichiers Excel sont bien présents dans le dossier `Inputs`.
+    -   Consultez `backend/backend.log` pour voir les erreurs d'import.

@@ -17,4 +17,6 @@ public class Activite {
     private TypeActivite type;
 
     private Integer nbPlaces; // Capacity (Jauge)
+
+    private String salle;
 }

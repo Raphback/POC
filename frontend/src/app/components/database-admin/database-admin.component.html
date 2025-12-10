@@ -44,14 +44,12 @@
                 <tbody>
                     <tr *ngFor="let item of getActiveTabData().data">
                         <td *ngFor="let col of getActiveTabData().columns">
-                            <ng-container
-                                *ngIf="col === 'lycee' || col === 'etudiant' || col === 'activite'; else simpleValue">
-                                {{ item[col]?.nom || item[col]?.prenom + ' ' + item[col]?.nom || item[col]?.titre || '-'
-                                }}
+                            <ng-container [ngSwitch]="col">
+                                <span *ngSwitchCase="'lycee'">{{ item[col]?.nom }}</span>
+                                <span *ngSwitchCase="'etudiant'">{{ item[col]?.prenom }} {{ item[col]?.nom }}</span>
+                                <span *ngSwitchCase="'activite'">{{ item[col]?.titre }}</span>
+                                <span *ngSwitchDefault>{{ item[col] || '-' }}</span>
                             </ng-container>
-                            <ng-template #simpleValue>
-                                {{ item[col] || '-' }}
-                            </ng-template>
                         </td>
                         <td>
                             <button class="btn btn-sm btn-outline-danger" (click)="deleteItem(item.id)"
