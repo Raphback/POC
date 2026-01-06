@@ -11,51 +11,38 @@
         <h2 class="neon-text-cyan mb-4">✅ Vos vœux ont bien été enregistrés !</h2>
 
         <div *ngIf="etudiant" class="student-info mb-4">
-            <div class="container mt-5">
-                <div class="card glass-card p-5 text-center">
-                    <!-- Success Icon -->
-                    <div class="success-icon mb-4">
-                        <div class="checkmark-circle">
-                            <div class="checkmark"></div>
-                        </div>
-                    </div>
+            <p class="text-light mb-1">
+                <strong>{{ etudiant.prenom }} {{ etudiant.nom }}</strong>
+            </p>
+            <p class="text-muted-custom">{{ etudiant.lycee?.nom }} - Classe {{ etudiant.classe }}</p>
+        </div>
 
-                    <!-- Success Message -->
-                    <h2 class="neon-text-cyan mb-4">✅ Vos vœux ont bien été enregistrés !</h2>
+        <!-- Récapitulatif -->
+        <div class="recap-container glass-panel p-4 mb-4">
+            <h4 class="text-neon-violet mb-3">📋 Récapitulatif de vos vœux</h4>
 
-                    <div *ngIf="etudiant" class="student-info mb-4">
-                        <p class="text-light mb-1">
-                            <strong>{{ etudiant.prenom }} {{ etudiant.nom }}</strong>
-                        </p>
-                        <p class="text-muted-custom">{{ etudiant.lycee?.nom }} - Classe {{ etudiant.classe }}</p>
-                    </div>
-
-                    <!-- Récapitulatif -->
-                    <div class="recap-container glass-panel p-4 mb-4">
-                        <h4 class="text-neon-violet mb-3">📋 Récapitulatif de vos vœux</h4>
-
-                        <div class="voeux-list">
-                            <div *ngFor="let voeu of voeux; let i = index" class="voeu-item mb-3 p-3 glass-card-light">
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-neon-cyan me-3">Vœu {{ i + 1 }}</span>
-                                    <span class="text-light">{{ voeu.titre }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <p class="text-center text-muted-custom mt-3">
-                            Vous serez informé des résultats d'affectation prochainement.
-                        </p>
-                    </div>
-
-                    <!-- Boutons d'action -->
-                    <div class="action-buttons mt-4">
-                        <button class="btn btn-neon-cyan me-3" (click)="retourAccueil()">
-                            🏠 Retour à l'accueil
-                        </button>
-                        <button class="btn btn-outline-neon" (click)="seDeconnecter()">
-                            🚪 Se déconnecter
-                        </button>
+            <div class="voeux-list">
+                <div *ngFor="let voeu of voeux; let i = index" class="voeu-item mb-3 p-3 glass-card-light">
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-neon-cyan me-3">Vœu {{ i + 1 }}</span>
+                        <span class="text-light">{{ voeu.titre }}</span>
                     </div>
                 </div>
             </div>
+
+            <p class="text-center text-muted-custom mt-3">
+                Vous serez informé des résultats d'affectation prochainement.
+            </p>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="action-buttons mt-4">
+            <button class="btn btn-neon-cyan me-3" (click)="retourAccueil()">
+                🏠 Retour à l'accueil
+            </button>
+            <button class="btn btn-outline-neon" (click)="seDeconnecter()">
+                🚪 Se déconnecter
+            </button>
+        </div>
+    </div>
+</div>

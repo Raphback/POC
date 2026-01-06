@@ -57,22 +57,23 @@ public class AuthController {
 
         if (adminOpt.isPresent()) {
             poc.model.Admin admin = adminOpt.get();
+            System.out.println("✅ Admin trouvé en base : " + admin.getUsername());
             if (admin.getPassword().equals(loginRequest.getPassword())) {
                 System.out.println("🔓 Authentification Admin réussie !");
-                // We might need a different token structure or just use the username as subject
-                // For now, we reuse the same token generation but maybe prefix it or handle it in JwtUtils
-                // But wait, JwtUtils might expect a matricule. Let's assume it just takes a string subject.
                 String token = jwtUtils.generateToken(admin.getUsername());
-                // We return the admin object wrapped in a response, or a specific AdminAuthResponse
-                // For simplicity, we can reuse AuthResponse but we need to handle the 'etudiant' field being null or add 'admin' field
-                // Let's create a generic response map or modify AuthResponse.
-                // Actually AuthResponse expects an Etudiant. Let's make a new response or just return a Map.
                 return ResponseEntity.ok(java.util.Map.of(
                     "token", token,
                     "role", admin.getRole(),
                     "username", admin.getUsername()
                 ));
+            } else {
+                System.out.println("❌ Mot de passe incorrect pour admin : " + admin.getUsername());
             }
+        } else {
+            System.out.println("❌ Admin introuvable en base pour username : " + loginRequest.getUsername());
+            // Debug : lister tous les admins
+            System.out.println("📋 Liste des admins en base :");
+            adminRepository.findAll().forEach(a -> System.out.println(" - " + a.getUsername()));
         }
         return ResponseEntity.status(401).body("Identifiants Admin incorrects");
     }
