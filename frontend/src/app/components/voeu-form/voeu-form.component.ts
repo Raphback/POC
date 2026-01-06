@@ -144,6 +144,22 @@ export class VoeuFormComponent implements OnInit {
         return;
       }
 
+      // Règle 3-4-5: appliquer la même logique que le backend pour éviter l'erreur
+      const types = [act3?.type, act4?.type, act5?.type];
+      const nbConf = types.filter(t => t === 'CONFERENCE').length;
+      const nbTable = types.filter(t => t === 'TABLE_RONDE').length;
+      const nbFlash = types.filter(t => t === 'FLASH_METIER').length;
+
+      const valid = (nbConf === 3) ||
+                    (nbConf === 2 && nbFlash === 1) ||
+                    (nbConf === 2 && nbTable === 1) ||
+                    (nbConf === 1 && nbTable === 1 && nbFlash === 1);
+
+      if (!valid) {
+        this.errorMessage = "La combinaison des vœux 3, 4 et 5 est invalide. Respectez la règle 3-4-5 (ex: 3 conférences, ou 2 conférences + 1 flash/table, ou 1 conférence + 1 table + 1 flash).";
+        return;
+      }
+
       // Prepare data for API
       const numericIds = allWishes.map(id => parseInt(id));
 
@@ -161,7 +177,9 @@ export class VoeuFormComponent implements OnInit {
           });
         },
         error: (err) => {
-          this.errorMessage = 'Erreur lors de l\'enregistrement.';
+          // Afficher le message détaillé du backend s'il existe
+          const serverMsg = err?.error ? (typeof err.error === 'string' ? err.error : JSON.stringify(err.error)) : null;
+          this.errorMessage = serverMsg || 'Erreur lors de l\'enregistrement.';
           this.successMessage = '';
         }
       });
