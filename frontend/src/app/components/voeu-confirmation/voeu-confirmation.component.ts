@@ -44,7 +44,8 @@ export class VoeuConfirmationComponent implements OnInit {
     }
 
     retourAccueil(): void {
-        this.router.navigate(['/voeux']);
+        // Rediriger vers la page de connexion pour que l'élève se reconnecte
+        this.router.navigate(['/login']);
     }
 
     seDeconnecter(): void {
