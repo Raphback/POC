@@ -145,6 +145,12 @@ export class DatabaseAdminComponent implements OnInit {
 
         const endpoint = endpoints[this.activeTab];
 
+        if (!endpoint) {
+            this.message = `Endpoint introuvable pour ${this.activeTab}`;
+            this.loading = false;
+            return;
+        }
+
         this.apiService.get(endpoint).subscribe({
             next: (data: any) => {
                 const tab = this.tabs.find(t => t.name === this.activeTab);
