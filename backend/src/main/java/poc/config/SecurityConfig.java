@@ -38,12 +38,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Autoriser localhost:4200 (dev local) et frontend:80 (Docker)
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:4200",
-            "http://frontend:80",
-            "http://127.0.0.1:4200"
-        ));
+        // En dev, autoriser les origines dynamiques (préviews, codespaces, localhost)
+        // Utiliser setAllowedOriginPatterns pour permettre des motifs (ex: *.github.dev)
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
