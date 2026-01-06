@@ -14,7 +14,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./backend/data:/app/data
+      - backend_data:/app/data
       - ./Inputs:/Inputs
     networks:
       - poc-network
@@ -46,4 +46,7 @@ services:
 networks:
   poc-network:
     driver: bridge
+
+volumes:
+  backend_data:
 

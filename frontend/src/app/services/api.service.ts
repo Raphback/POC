@@ -128,11 +128,13 @@ export class ApiService {
   // Generic methods for database admin
   get<T>(endpoint: string): Observable<T> {
     const headers = this.getAuthHeaders();
-    return this.http.get<T>(`${endpoint}`, { headers });
+    const fullUrl = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return this.http.get<T>(fullUrl, { headers });
   }
 
   delete(endpoint: string): Observable<any> {
     const headers = this.getAuthHeaders();
-    return this.http.delete(endpoint, { headers, responseType: 'text' });
+    const fullUrl = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return this.http.delete(fullUrl, { headers, responseType: 'text' });
   }
 }
