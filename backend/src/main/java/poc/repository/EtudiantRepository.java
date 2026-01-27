@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface EtudiantRepository extends JpaRepository<Etudiant, Long> {
     Optional<Etudiant> findByMatriculeCsv(String matriculeCsv);
+
+    Optional<Etudiant> findByIne(String ine);
 }

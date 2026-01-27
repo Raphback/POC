@@ -1,169 +1,130 @@
-# 📝 Instructions pour Push Git
+# 📝 Guide Git - POC FESUP 2026
 
-Voici comment pousser ce projet sur Git une fois terminé.
+Ce guide explique comment gérer le versioning Git du projet.
 
 ---
 
-## Option 1 : Nouveau Repository GitHub
+## 🚀 Push sur une Branche Existante
 
-### 1. Créer le Repository sur GitHub
+### Avec Git Bash
 
-1. Aller sur https://github.com
-2. Cliquer sur **New repository**
-3. Nom : `fesup-2026` (ou autre)
-4. Description : "Système de gestion des vœux pour FESUP 2026"
-5. **NE PAS** cocher "Initialize with README" (on en a déjà un)
-6. Cliquer sur **Create repository**
+```bash
+# 1. Se placer dans le dossier
+cd "/d/Documents/Télécom st étienne/Cours/Semestre 9/POC"
 
-### 2. Initialiser Git Localement
+# 2. Vérifier le statut
+git status
 
-```powershell
-cd "c:/Users/ArthurLemarc_v4i1hl3/OneDrive - Noveo/Bureau/TSE/Semestre 9/POC"
+# 3. Changer de branche
+git checkout <nom-branche>
 
-# Initialiser Git
-git init
-
-# Ajouter tous les fichiers (le .gitignore exclura automatiquement les fichiers inutiles)
+# 4. Ajouter les fichiers modifiés
 git add .
 
-# Premier commit
-git commit -m "Initial commit - FESUP 2026 v1.0"
+# 5. Commit avec message descriptif
+git commit -m "Description des modifications"
+
+# 6. Push
+git push origin <nom-branche>
 ```
 
-### 3. Lier au Repository GitHub
+---
 
-```powershell
-# Remplacer <USERNAME> et <REPO_NAME> par vos valeurs
-git remote add origin https://github.com/<USERNAME>/<REPO_NAME>.git
+## 🆕 Créer un Nouveau Repository
 
-# Créer et pousser sur la branche main
+### 1. Sur GitHub
+
+1. Aller sur https://github.com/new
+2. Nom : `fesup-2026` (ou POC)
+3. **NE PAS** cocher "Initialize with README"
+4. Créer le repository
+
+### 2. En local (Git Bash)
+
+```bash
+cd "/d/Documents/Télécom st étienne/Cours/Semestre 9/POC"
+
+git init
+git add .
+git commit -m "Initial commit - FESUP 2026 v1.0"
+git remote add origin https://github.com/<USERNAME>/<REPO>.git
 git branch -M main
 git push -u origin main
 ```
 
 ---
 
-## Option 2 : Repository Existant
-
-Si vous avez déjà un repo :
-
-```powershell
-cd "c:/Users/ArthurLemarc_v4i1hl3/OneDrive - Noveo/Bureau/TSE/Semestre 9/POC"
-
-# Vérifier la branche actuelle
-git branch
-
-# Ajouter les modifications
-git add .
-
-# Commit
-git commit -m "Update: Complete FESUP 2026 application with docs"
-
-# Push
-git push origin main
-```
-
----
-
 ## ✅ Vérifications Avant Push
 
-### 1. Vérifier le .gitignore
+### Fichiers à NE PAS commit
 
-```powershell
-git status
-```
+Le `.gitignore` exclut automatiquement :
+- ❌ `node_modules/`
+- ❌ `target/`
+- ❌ `*.log`
+- ❌ `.gemini/`
+- ❌ `data/`
 
-✅ **Vous NE devriez PAS voir** :
-- `node_modules/`
-- `target/`
-- `*.log`
-- `.gemini/`
-- `data/`
+Vérifiez avec `git status` que ces dossiers n'apparaissent pas.
 
-### 2. Tester le Build
-
-```powershell
-# Backend
-cd backend
-mvn clean package
-# ✅ Doit réussir
-
-# Frontend
-cd ../frontend
-npm run build
-# ✅ Doit réussir
-```
-
----
-
-## 📤 Partager avec l'Équipe
-
-Une fois pushé, partager :
-
-```
-Repository: https://github.com/<USERNAME>/<REPO_NAME>
-Branche: main
-Docs: Voir README.md pour l'installation
-```
-
-### Commandes pour vos collègues
+### Tester le Build
 
 ```bash
-# Cloner
-git clone https://github.com/<USERNAME>/<REPO_NAME>.git
-cd <REPO_NAME>
+# Backend
+cd backend && mvn clean package
 
-# Installer & Lancer
-# Suivre QUICK_START.md
+# Frontend
+cd frontend && npm run build
 ```
 
 ---
 
 ## 🌿 Workflow Git Recommandé
 
-### Pour Développer une Nouvelle Fonctionnalité
+### Branches
+
+| Branche | Usage |
+|---------|-------|
+| `main` | Production (code stable) |
+| `develop` | Développement actif |
+| `feature/*` | Nouvelles fonctionnalités |
+| `fix/*` | Corrections de bugs |
+| `backend-*` | Modifications backend |
+| `frontend-*` | Modifications frontend |
+
+### Exemple de Feature
 
 ```bash
-# Créer une branche feature
+# Créer une branche
 git checkout -b feature/nouvelle-fonctionnalite
 
-# Travailler...
+# Travailler et commiter
 git add .
 git commit -m "Add: Description de la feature"
 
-# Pousser la branche
+# Pousser
 git push origin feature/nouvelle-fonctionnalite
 
-# Sur GitHub: Créer une Pull Request vers main
+# Sur GitHub : créer une Pull Request vers main/develop
 ```
-
-### Branches Recommandées
-
-- `main` : Production (code stable uniquement)
-- `develop` : Développement actif
-- `feature/*` : Nouvelles fonctionnalités
-- `fix/*` : Corrections de bugs
-- `docs/*` : Modifications de documentation
 
 ---
 
 ## 🔒 Sécurité
 
-**⚠️ IMPORTANT** : Ne **JAMAIS** commit :
-- Mots de passe ou clés API
+**⚠️ JAMAIS commit** :
+- Mots de passe / clés API
 - Données personnelles
-- Fichiers de configuration sensibles
-
-Le `.gitignore` empêche déjà la plupart des fichiers sensibles d'être inclus.
+- Fichiers de config avec secrets
 
 ---
 
-## 📊 État Actuel du Projet
+## 📊 État du Projet
 
-✅ README.md créé  
+✅ README.md à jour  
 ✅ .gitignore configuré  
-✅ Fichiers temporaires supprimés  
 ✅ Documentation complète  
-✅ Code testé et fonctionnel  
+✅ Gestion des doublons INE  
+✅ Docker Compose fonctionnel  
 
 **Prêt pour le push !** 🚀

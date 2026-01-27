@@ -9,7 +9,7 @@ import { Lycee, Activite, Etudiant } from '../models/models';
 })
 export class ApiService {
 
-  private apiUrl = '/api';
+  private apiUrl = 'http://localhost:8080/api';
 
   constructor(private http: HttpClient) { }
 
@@ -30,7 +30,27 @@ export class ApiService {
         if (response && response.token) {
           localStorage.setItem('token', response.token);
           localStorage.setItem('admin', JSON.stringify({ username: response.username, role: response.role }));
-          localStorage.removeItem('user'); // Clear student user if any
+          localStorage.removeItem('user');
+          localStorage.removeItem('viewer');
+        }
+      })
+    );
+  }
+
+  loginViewer(email: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/login/viewer`, { username: email, password }).pipe(
+      tap((response: any) => {
+        if (response && response.token) {
+          localStorage.setItem('token', response.token);
+          localStorage.setItem('viewer', JSON.stringify({
+            email: response.email,
+            nom: response.nom,
+            prenom: response.prenom,
+            lyceeId: response.lyceeId,
+            lyceeName: response.lyceeName
+          }));
+          localStorage.removeItem('user');
+          localStorage.removeItem('admin');
         }
       })
     );
@@ -38,6 +58,15 @@ export class ApiService {
 
   isAdmin(): boolean {
     return !!localStorage.getItem('admin');
+  }
+
+  isViewer(): boolean {
+    return !!localStorage.getItem('viewer');
+  }
+
+  getViewer(): any {
+    const viewer = localStorage.getItem('viewer');
+    return viewer ? JSON.parse(viewer) : null;
   }
 
   getAdminRole(): string | null {
@@ -49,6 +78,7 @@ export class ApiService {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('admin');
+    localStorage.removeItem('viewer');
   }
 
   getToken(): string | null {
@@ -136,5 +166,20 @@ export class ApiService {
     const headers = this.getAuthHeaders();
     const fullUrl = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     return this.http.delete(fullUrl, { headers, responseType: 'text' });
+  }
+
+  getViewerEtudiants(lyceeId: number): Observable<Etudiant[]> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<Etudiant[]>(`${this.apiUrl}/viewer/etudiants/${lyceeId}`, { headers });
+  }
+
+  getViewerVoeux(lyceeId: number): Observable<any[]> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<any[]>(`${this.apiUrl}/viewer/voeux/${lyceeId}`, { headers });
+  }
+
+  getViewerStats(lyceeId: number): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<any>(`${this.apiUrl}/viewer/stats/${lyceeId}`, { headers });
   }
 }

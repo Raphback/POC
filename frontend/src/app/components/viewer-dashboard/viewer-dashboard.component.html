@@ -1,0 +1,83 @@
+<div class="container mt-5">
+    <div class="card glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="neon-text-cyan">👁️ Espace Professeur</h2>
+                <h5 class="text-light opacity-75">{{ viewer?.nom }} {{ viewer?.prenom }} - {{ viewer?.lyceeName }}</h5>
+            </div>
+            <button class="btn btn-outline-light" (click)="logout()">Déconnexion</button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-4" *ngIf="stats">
+            <div class="col-md-3">
+                <div class="card glass-card p-3 text-center">
+                    <h3 class="neon-text-violet">{{ stats.totalStudents }}</h3>
+                    <small class="text-white">Élèves Total</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card glass-card p-3 text-center">
+                    <h3 class="neon-text-green">{{ stats.studentsWithVoeux }}</h3>
+                    <small class="text-white">Ont fait leurs vœux</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card glass-card p-3 text-center">
+                    <h3 class="neon-text-orange">{{ stats.studentsWithoutVoeux }}</h3>
+                    <small class="text-white">Sans vœux</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card glass-card p-3 text-center">
+                    <h3 class="text-white">{{ stats.participationRate | number:'1.0-1' }}%</h3>
+                    <small class="text-white">Taux de participation</small>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="error" class="alert alert-danger glass-alert mb-4">
+            {{ error }}
+        </div>
+
+        <div *ngIf="loading" class="text-center py-5">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="table-responsive" *ngIf="!loading">
+            <table class="table table-dark table-hover glass-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Matricule</th>
+                        <th scope="col">Nom</th>
+                        <th scope="col">Prénom</th>
+                        <th scope="col">Classe</th>
+                        <th scope="col">État Vœux</th>
+                        <th scope="col">Nb Vœux</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let etu of etudiants">
+                        <td>{{ etu.matriculeCsv }}</td>
+                        <td>{{ etu.nom }}</td>
+                        <td>{{ etu.prenom }}</td>
+                        <td>{{ etu.classe }}</td>
+                        <td>
+                            <span class="badge" [class.bg-success]="hasVoeux(etu.id)"
+                                [class.bg-danger]="!hasVoeux(etu.id)">
+                                {{ hasVoeux(etu.id) ? 'Fait' : 'Non Fait' }}
+                            </span>
+                        </td>
+                        <td>{{ getStudentVoeuxCount(etu.id) }}</td>
+                    </tr>
+                    <tr *ngIf="etudiants.length === 0">
+                        <td colspan="6" class="text-center text-muted">Aucun élève trouvé pour ce lycée.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

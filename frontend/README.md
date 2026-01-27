@@ -1,27 +1,80 @@
-# Frontend
+# 🎨 Frontend - FESUP 2026
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.16.
+Application Angular pour la gestion des vœux du Forum FESUP 2026.
 
-## Development server
+## 📋 Prérequis
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+- **Node.js** 18+ (`node -v`)
+- **NPM** 8+ (`npm -v`)
 
-## Code scaffolding
+## 🚀 Démarrage
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+### Installation des dépendances
 
-## Build
+```bash
+npm install
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+### Serveur de développement
 
-## Running unit tests
+```bash
+npm start
+# ou
+ng serve
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+L'application est accessible sur **http://localhost:4200**
 
-## Running end-to-end tests
+## 🏗️ Build
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+```bash
+# Build de production
+npm run build
 
-## Further help
+# Les fichiers sont générés dans dist/frontend/
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+## 🧪 Tests
+
+```bash
+# Tests unitaires
+npm test
+
+# Tests e2e
+npm run e2e
+```
+
+## 📁 Structure
+
+```
+src/
+├── app/
+│   ├── components/     # Composants Angular
+│   │   ├── login/
+│   │   ├── admin-dashboard/
+│   │   ├── viewer-dashboard/
+│   │   ├── voeu-form/
+│   │   └── voeu-confirmation/
+│   ├── services/       # Services (API calls)
+│   ├── models/         # Interfaces TypeScript
+│   └── app-routing.module.ts
+├── assets/             # Images, fonts
+└── styles.css          # Styles globaux
+```
+
+## 🎨 Design
+
+L'interface utilise :
+- **Bootstrap 5** pour la mise en page
+- **CSS custom** avec effets lumineux
+- Design "Neon" personnalisé
+
+## 🔗 API Backend
+
+Le frontend communique avec le backend via :
+- **Dev local** : `http://localhost:8080`
+- **Docker** : proxy nginx vers `http://backend:8080`
+
+---
+
+Voir [README principal](../README.md) pour plus d'infos.

@@ -5,51 +5,89 @@ Permet aux étudiants de saisir leurs choix de conférences et ateliers, et aux 
 
 ## 🚀 Démarrage Rapide
 
-Pour lancer le projet, consultez le guide détaillé : [LANCEMENT.md](LANCEMENT.md)
+### Option 1 : Docker (Recommandé) 🐳
 
-En résumé :
-1.  **Backend** : `cd backend` puis `.\start-backend.ps1`
-2.  **Frontend** : `cd frontend` puis `.\start-frontend.ps1`
+```bash
+# Depuis la racine du projet
+docker-compose up --build
+```
 
 Accès :
--   Frontend : http://localhost:4200
--   Backend API : http://localhost:8080/api
--   Console H2 : http://localhost:8080/h2-console
+- **Frontend** : http://localhost:4200
+- **Backend API** : http://localhost:8080
+
+> Pour plus de détails, voir [DOCKER.md](DOCKER.md)
+
+### Option 2 : Lancement Local
+
+Pour lancer le projet sans Docker, consultez [LANCEMENT.md](LANCEMENT.md)
+
+## 👤 Identifiants de Test
+
+| Rôle | Login | Mot de passe |
+|------|-------|--------------|
+| **Admin** | `admin` | `admin` |
+| **Viewer (Fauriel)** | `prof@fauriel.fr` | `prof` |
+| **Viewer (Brassens)** | `prof@brassens.fr` | `prof` |
+| **Étudiant** | INE (ex: `120890177FA`) | - |
+
+## 📂 Structure du Projet
+
+```
+POC/
+├── backend/          # API Spring Boot (Java 17)
+├── frontend/         # Application Angular 17
+├── Inputs/           # Fichiers Excel des étudiants
+├── docker-compose.yml
+├── DOCKER.md         # Guide Docker détaillé
+├── LANCEMENT.md      # Guide de lancement local
+└── README.md         # Ce fichier
+```
 
 ## 📂 Données et Inputs
 
-Le projet est configuré pour charger automatiquement les données réelles au démarrage depuis le dossier `Inputs`.
+Le projet charge automatiquement les données au démarrage depuis le dossier `Inputs/`.
 
 ### Fichiers Sources
-Les fichiers suivants doivent être présents dans le dossier `Inputs` à la racine du projet :
 
-1.  **Étudiants** (`.xlsx` ou `.xls`) :
-    -   Contient la liste des élèves (Nom, Prénom, Matricule, Lycée).
-    -   Exemple : `LGT Fauriel FESUP 2026.xlsx`, `Lycée Georges Brassens...xls`.
+1. **Étudiants** (`.xlsx` ou `.xls`) :
+   - Liste des élèves (Nom, Prénom, Matricule, INE, Lycée)
+   - Exemple : `LGT Fauriel FESUP 2026.xlsx`
 
-2.  **Activités et Capacités** (`capacites.xlsx`) :
-    -   Contient la liste des conférences, tables rondes et flash métiers.
-    -   Colonnes attendues : Titre, Salle, Capacité.
-    -   Ce fichier est essentiel pour définir les jauges des salles.
+2. **Activités et Capacités** (`capacites.xlsx`) :
+   - Liste des conférences, tables rondes et flash métiers
+   - Colonnes : Titre, Salle, Capacité
 
-### Réinitialisation
-À chaque redémarrage du Backend, les données sont **réinitialisées** et rechargées depuis ces fichiers Excel. Cela garantit un environnement propre pour les tests et la démo.
+### Gestion des Doublons
+
+Le système détecte et supprime automatiquement les doublons d'INE au démarrage pour éviter les conflits.
 
 ## 🛠️ Stack Technique
 
--   **Backend** : Java 17, Spring Boot 3, H2 Database, Apache POI (Excel).
--   **Frontend** : Angular 17, Bootstrap, CSS "Neon" custom.
--   **Outils** : Maven, NPM.
+| Composant | Technologies |
+|-----------|--------------|
+| **Backend** | Java 17, Spring Boot 3, H2 Database, Apache POI |
+| **Frontend** | Angular 17, Bootstrap, CSS custom |
+| **DevOps** | Docker, Docker Compose, Maven, NPM |
 
-## 👤 Auteurs
+## 📋 Fonctionnalités
+
+- ✅ 3 modes : Admin, Viewer, Étudiant
+- ✅ Connexion par INE pour les étudiants
+- ✅ Import automatique des données Excel
+- ✅ Gestion des doublons automatique
+- ✅ Déploiement Docker simplifié
+
+## 👥 Auteurs
+
 Projet réalisé pour le FESUP 2026.
 
-Prise de note réunion 6/01
-    Laissez les coférenciers dans les meme salle si possible
-    faire que les conférences s'enchainent (ingenieur,ingenieur,ingenieur)
-    affectation par demi journée jeudi matin jeudi aprem vendredi matin vendredi aprem
-    y'a une marge de 10% sur le nombre d'élèves
-    Mettre la liste de ceux qui des eleèves qui ne rep pas pour les directeurs
-    virez les étudiants doublons
-    Description des conférences sur l'interface des choix
-    3 modes admins viewer et élèves
+## 📝 Changelog
+
+### v1.1.0 (Janvier 2026)
+- Ajout de la détection/suppression automatique des doublons INE
+- Mise à jour de Docker Compose (suppression version obsolète)
+- Amélioration de la gestion des erreurs d'import
+
+### v1.0.0
+- Version initiale

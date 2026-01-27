@@ -1,14 +1,8 @@
 package poc.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Affectation {
 
     @Id
@@ -24,4 +18,46 @@ public class Affectation {
     private Activite activite;
 
     private Integer rangVoeu; // 1, 2, 3, 4, 5 (or null if forced assignment)
+
+    public Affectation() {
+    }
+
+    public Affectation(Long id, Etudiant etudiant, Activite activite, Integer rangVoeu) {
+        this.id = id;
+        this.etudiant = etudiant;
+        this.activite = activite;
+        this.rangVoeu = rangVoeu;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Etudiant getEtudiant() {
+        return etudiant;
+    }
+
+    public void setEtudiant(Etudiant etudiant) {
+        this.etudiant = etudiant;
+    }
+
+    public Activite getActivite() {
+        return activite;
+    }
+
+    public void setActivite(Activite activite) {
+        this.activite = activite;
+    }
+
+    public Integer getRangVoeu() {
+        return rangVoeu;
+    }
+
+    public void setRangVoeu(Integer rangVoeu) {
+        this.rangVoeu = rangVoeu;
+    }
 }
