@@ -12,7 +12,7 @@ export class LoginComponent {
     loginForm: FormGroup;
     errorMessage: string = '';
 
-    isAdminMode: boolean = false;
+    loginMode: 'student' | 'admin' | 'viewer' = 'student';
 
     constructor(
         private fb: FormBuilder,
@@ -26,17 +26,23 @@ export class LoginComponent {
         });
     }
 
-    toggleAdminMode(): void {
-        this.isAdminMode = !this.isAdminMode;
-        if (this.isAdminMode) {
-            this.loginForm.get('matricule')?.clearValidators();
+    setLoginMode(mode: 'student' | 'admin' | 'viewer'): void {
+        this.loginMode = mode;
+        this.errorMessage = '';
+        
+        // Clear all validators first
+        this.loginForm.get('matricule')?.clearValidators();
+        this.loginForm.get('username')?.clearValidators();
+        this.loginForm.get('password')?.clearValidators();
+
+        if (mode === 'student') {
+            this.loginForm.get('matricule')?.setValidators(Validators.required);
+        } else {
+            // Both admin and viewer need username/password
             this.loginForm.get('username')?.setValidators(Validators.required);
             this.loginForm.get('password')?.setValidators(Validators.required);
-        } else {
-            this.loginForm.get('matricule')?.setValidators(Validators.required);
-            this.loginForm.get('username')?.clearValidators();
-            this.loginForm.get('password')?.clearValidators();
         }
+
         this.loginForm.get('matricule')?.updateValueAndValidity();
         this.loginForm.get('username')?.updateValueAndValidity();
         this.loginForm.get('password')?.updateValueAndValidity();
@@ -44,7 +50,7 @@ export class LoginComponent {
 
     onSubmit(): void {
         if (this.loginForm.valid) {
-            if (this.isAdminMode) {
+            if (this.loginMode === 'admin') {
                 const { username, password } = this.loginForm.value;
                 this.apiService.loginAdmin(username, password).subscribe({
                     next: () => {
@@ -53,6 +59,17 @@ export class LoginComponent {
                     error: (err) => {
                         this.errorMessage = 'Identifiants Admin incorrects.';
                         console.error('Admin Login error', err);
+                    }
+                });
+            } else if (this.loginMode === 'viewer') {
+                const { username, password } = this.loginForm.value;
+                this.apiService.loginViewer(username, password).subscribe({
+                    next: () => {
+                        this.router.navigate(['/viewer']);
+                    },
+                    error: (err) => {
+                        this.errorMessage = 'Identifiants Professeur incorrects.';
+                        console.error('Viewer Login error', err);
                     }
                 });
             } else {

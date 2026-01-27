@@ -13,6 +13,7 @@ import { VoeuConfirmationComponent } from './components/voeu-confirmation/voeu-c
 import { HttpClientModule } from '@angular/common/http';
 import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { ViewerDashboardComponent } from './components/viewer-dashboard/viewer-dashboard.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     AdminDashboardComponent,
     DatabaseAdminComponent,
     StatisticsDashboardComponent,
-    VoeuConfirmationComponent
+    VoeuConfirmationComponent,
+    ViewerDashboardComponent
   ],
   imports: [
     BrowserModule,

@@ -39,6 +39,11 @@ desktop.ini
 logs/
 backend_init.log
 build_error.log
+hs_err_pid*.log
+
+# Debug files
+debug_*.js
+debug_*.py
 
 # Environment files
 .env

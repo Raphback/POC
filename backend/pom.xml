@@ -40,12 +40,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Lombok -->
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
+        <!-- Lombok Removed due to Java 25 incompatibility -->
 
 		<!-- Dev Tools -->
 		<dependency>

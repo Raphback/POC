@@ -18,34 +18,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF for simplicity (API & H2 console)
-            .csrf(csrf -> csrf.disable())
-            // Enable CORS
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // Allow H2 console to be displayed in an iframe
-            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-            // Permit access to H2 console and all API endpoints without authentication
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/api/**").permitAll()
-                .anyRequest().permitAll()
-            );
-        // Use HTTP Basic authentication for any other endpoints
-        // .httpBasic(Customizer.withDefaults()); // Disabled to avoid browser auth pop-up
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/api/**").permitAll()
+                        .anyRequest().permitAll());
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // En dev, autoriser les origines dynamiques (préviews, codespaces, localhost)
-        // Utiliser setAllowedOriginPatterns pour permettre des motifs (ex: *.github.dev)
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);
         return source;

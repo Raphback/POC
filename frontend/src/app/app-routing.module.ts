@@ -7,6 +7,7 @@ import { DatabaseAdminComponent } from './components/database-admin/database-adm
 import { StatisticsDashboardComponent } from './components/statistics-dashboard/statistics-dashboard.component';
 import { VoeuConfirmationComponent } from './components/voeu-confirmation/voeu-confirmation.component';
 import { AuthGuard } from './auth.guard';
+import { ViewerDashboardComponent } from './components/viewer-dashboard/viewer-dashboard.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -15,6 +16,7 @@ const routes: Routes = [
   { path: 'admin', component: AdminDashboardComponent, canActivate: [AuthGuard] },
   { path: 'database', component: DatabaseAdminComponent, canActivate: [AuthGuard] },
   { path: 'statistics', component: StatisticsDashboardComponent, canActivate: [AuthGuard] },
+  { path: 'viewer', component: ViewerDashboardComponent, canActivate: [AuthGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' }
 ];
 
