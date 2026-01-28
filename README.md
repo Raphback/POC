@@ -1,95 +1,113 @@
-﻿# 🎓 FESUP 2026 - Gestion des Vœux
+﻿# 🎓 FESUP 2026 - Plateforme de Gestion et Optimisation
 
-Application de gestion des vœux pour le Forum FESUP 2026.
-Permet aux étudiants de saisir leurs choix de conférences et ateliers, et aux administrateurs de gérer les affectations.
+Bienvenue sur le projet de gestion du Forum FESUP 2026. Cette plateforme complète permet de gérer les vœux des étudiants, l'attribution des salles et l'optimisation des plannings pour plus de 4 000 élèves.
 
-## 🚀 Démarrage Rapide
+---
 
-### Option 1 : Docker (Recommandé) 🐳
+## 📖 Sommaire
+1. [Vue d'ensemble](#-vue-densemble)
+2. [Documentation Utilisateur](#-documentation-utilisateur)
+3. [Documentation Technique](#-documentation-technique)
+4. [Moteur d'Optimisation](#-moteur-doptimisation)
+5. [Dépannage](#-dépannage)
 
+---
+
+## 📋 Vue d'ensemble
+
+Le projet se compose de trois piliers majeurs :
+- **Portail Web Étudiant** : Saisie des vœux et consultation des affectations.
+- **Tableau de Bord Administrateur** : Import de données, suivi des statistiques et pilotage global.
+- **Moteur d'Optimisation (CP-SAT)** : Algorithme puissant basé sur Google OR-Tools pour garantir une affectation optimale respectant 100% des vœux prioritaires.
+
+---
+
+## 👤 Documentation Utilisateur
+
+### 🔑 Identifiants de Test
+| Rôle | Login / Identifiant | Mot de passe |
+|------|---------------------|--------------|
+| **Administrateur** | `admin` | `admin` |
+| **Viewer (Lycée Fauriel)** | `prof@fauriel.fr` | `prof` |
+| **Viewer (Lycée Brassens)** | `prof@brassens.fr` | `prof` |
+| **Étudiant** | INE (ex: `120890177FA`) | *(aucun)* |
+
+### 🛠️ Processus Métier
+1. **Initialisation** : L'administrateur dépose les fichiers Excel (`Inputs/`) contenant la liste des élèves et les capacités des salles.
+2. **Saisie des Vœux** : Les étudiants se connectent avec leur INE pour choisir leurs 5 activités préférées.
+3. **Optimisation** : Une fois les vœux recueillis, l'administrateur lance le moteur d'optimisation.
+4. **Consultation** : Les étudiants et les lycées (viewers) consultent les plannings générés sur la plateforme.
+
+---
+
+## 🛠️ Documentation Technique
+
+### 🏗️ Stack Technologique
+- **Backend** : Java 17, Spring Boot 3, H2 Database, Apache POI (Excel).
+- **Frontend** : Angular 17, Bootstrap 5.
+- **Optimisation** : Python 3, Google OR-Tools (CP-SAT Solver).
+- **Infrastructure** : Docker, Docker Compose.
+
+### 🚀 Guide de Démarrage
+
+#### Option A : Docker (Recommandé 🐳)
+C'est la méthode la plus simple pour lancer tout l'écosystème web.
 ```bash
-# Depuis la racine du projet
 docker-compose up --build
 ```
+- **Interface Web** : [http://localhost:4200](http://localhost:4200)
+- **API Backend** : [http://localhost:8080](http://localhost:8080)
 
-Accès :
-- **Frontend** : http://localhost:4200
-- **Frontend** : http://localhost:4200
-- **Backend API** : http://localhost:8080
+#### Option B : Lancement Local (Sans Docker)
+1. **Backend** : Allez dans `backend/` et lancez `start-backend.bat`.
+2. **Frontend** : Allez dans `frontend/` et lancez `start-frontend.bat`.
+3. **Accès** : [http://localhost:4200](http://localhost:4200).
 
-> [!TIP]
-> Pour des guides détaillés, consultez la **[Documentation Technique](docs/Documentation_Technique.md)** et le **[Guide Utilisateur](docs/Documentation_Utilisateur.md)**.
+---
 
-### Option 2 : Lancement Local
+## 🧠 Moteur d'Optimisation
 
-Pour lancer le projet sans Docker, consultez [LANCEMENT.md](LANCEMENT.md)
+L'algorithme (`room_attribution/`) gère la complexité mathématique de l'événement.
 
-## 👤 Identifiants de Test
+### ⚖️ Règles et Contraintes
+- **Vœux 1 & 2** : Garantis à **100%**.
+- **Quantité** : 4 présentations par élève par demi-journée.
+- **Diversité** : Maximum 1 Table Ronde et 1 Flash Métier par élève.
+- **Capacité** : Strict respect des jauges de salles.
+- **Logistique** : 2 vagues d'arrivée (Tôt / Tard) pour lisser les flux.
 
-| Rôle | Login | Mot de passe |
-|------|-------|--------------|
-| **Admin** | `admin` | `admin` |
-| **Viewer (Fauriel)** | `prof@fauriel.fr` | `prof` |
-| **Viewer (Brassens)** | `prof@brassens.fr` | `prof` |
-| **Étudiant** | INE (ex: `120890177FA`) | - |
+### 🏃 Lancement de l'Optimiseur
+Si vous souhaitez relancer l'algorithme Python manuellement :
+```bash
+cd room_attribution
+python -m venv venv
+# Windows
+.\venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+pip install -r requirements.txt
+python src/main_grouped.py
+```
+
+---
 
 ## 📂 Structure du Projet
-
 ```
 POC/
-├── backend/          # API Spring Boot (Java 17)
-├── frontend/         # Application Angular 17
-├── Inputs/           # Fichiers Excel des étudiants
-├── docker-compose.yml
-├── DOCKER.md         # Guide Docker détaillé
-├── LANCEMENT.md      # Guide de lancement local
-└── README.md         # Ce fichier
+├── backend/          # Serveur Spring Boot & Tests
+├── frontend/         # Application Angular & Tests
+├── room_attribution/ # Moteur d'optimisation Python
+├── tests/            # Dossier centralisé de tous les tests
+│   ├── backend/
+│   ├── frontend/
+│   └── algorithm/    # Script de vérification de l'algorithme
+├── Inputs/           # Fichiers sources (Excel)
+└── docker-compose.yml
 ```
 
-## 📂 Données et Inputs
+---
 
-Le projet charge automatiquement les données au démarrage depuis le dossier `Inputs/`.
-
-### Fichiers Sources
-
-1. **Étudiants** (`.xlsx` ou `.xls`) :
-   - Liste des élèves (Nom, Prénom, Matricule, INE, Lycée)
-   - Exemple : `LGT Fauriel FESUP 2026.xlsx`
-
-2. **Activités et Capacités** (`capacites.xlsx`) :
-   - Liste des conférences, tables rondes et flash métiers
-   - Colonnes : Titre, Salle, Capacité
-
-### Gestion des Doublons
-
-Le système détecte et supprime automatiquement les doublons d'INE au démarrage pour éviter les conflits.
-
-## 🛠️ Stack Technique
-
-| Composant | Technologies |
-|-----------|--------------|
-| **Backend** | Java 17, Spring Boot 3, H2 Database, Apache POI |
-| **Frontend** | Angular 17, Bootstrap, CSS custom |
-| **DevOps** | Docker, Docker Compose, Maven, NPM |
-
-## 📋 Fonctionnalités
-
-- ✅ 3 modes : Admin, Viewer, Étudiant
-- ✅ Connexion par INE pour les étudiants
-- ✅ Import automatique des données Excel
-- ✅ Gestion des doublons automatique
-- ✅ Déploiement Docker simplifié
-
-## 👥 Auteurs
-
-Projet réalisé pour le FESUP 2026.
-
-## 📝 Changelog
-
-### v1.1.0 (Janvier 2026)
-- Ajout de la détection/suppression automatique des doublons INE
-- Mise à jour de Docker Compose (suppression version obsolète)
-- Amélioration de la gestion des erreurs d'import
-
-### v1.0.0
-- Version initiale
+## 🆘 Dépannage
+- **Doublons** : Le système détecte et supprime automatiquement les doublons d'INE lors de l'import.
+- **Ports** : Assurez-vous que les ports `8080` et `4200` ne sont pas utilisés par d'autres applications.
+- **Logs** : Les logs détaillés de l'import Excel sont disponibles dans la console du backend.
