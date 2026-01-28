@@ -14,9 +14,11 @@ docker-compose up --build
 
 Accès :
 - **Frontend** : http://localhost:4200
+- **Frontend** : http://localhost:4200
 - **Backend API** : http://localhost:8080
 
-> Pour plus de détails, voir [DOCKER.md](DOCKER.md)
+> [!TIP]
+> Pour des guides détaillés, consultez la **[Documentation Technique](docs/Documentation_Technique.md)** et le **[Guide Utilisateur](docs/Documentation_Utilisateur.md)**.
 
 ### Option 2 : Lancement Local
 
