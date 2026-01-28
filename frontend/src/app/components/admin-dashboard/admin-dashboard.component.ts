@@ -2,56 +2,44 @@ import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
 
 @Component({
-    selector: 'app-admin-dashboard',
-    templateUrl: './admin-dashboard.component.html',
-    styleUrls: ['./admin-dashboard.component.css']
+  selector: 'app-admin-dashboard',
+  templateUrl: './admin-dashboard.component.html',
+  styleUrls: ['./admin-dashboard.component.css']
 })
 export class AdminDashboardComponent implements OnInit {
+  affectations: any[] = [];
+  loading = false;
+  message = '';
 
-    affectations: any[] = [];
-    loading = false;
-    message = '';
+  constructor(private api: ApiService) {}
 
-    constructor(private apiService: ApiService) { }
+  ngOnInit(): void { this.loadAffectations(); }
 
-    ngOnInit(): void {
-        this.loadAffectations();
-    }
+  loadAffectations(): void {
+    this.api.getAffectations().subscribe({
+      next: d => this.affectations = d,
+      error: e => console.error('Erreur affectations', e)
+    });
+  }
 
-    loadAffectations(): void {
-        this.apiService.getAffectations().subscribe({
-            next: (data) => this.affectations = data,
-            error: (err) => console.error('Erreur chargement affectations', err)
-        });
-    }
+  runAssignment(): void {
+    this.loading = true;
+    this.message = 'Algorithme en cours...';
+    this.api.runAssignment().subscribe({
+      next: () => { this.message = 'Affectation terminee !'; this.loading = false; this.loadAffectations(); },
+      error: e => { this.message = 'Erreur: ' + e.message; this.loading = false; }
+    });
+  }
 
-    runAssignment(): void {
-        this.loading = true;
-        this.message = 'Algorithme en cours...';
-        this.apiService.runAssignment().subscribe({
-            next: (res) => {
-                this.message = 'Affectation terminée avec succès !';
-                this.loading = false;
-                this.loadAffectations();
-            },
-            error: (err) => {
-                this.message = 'Erreur : ' + err.message;
-                this.loading = false;
-            }
-        });
-    }
-
-    downloadPdf(): void {
-        this.apiService.exportPdf().subscribe({
-            next: (blob) => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'convocations.pdf';
-                a.click();
-                window.URL.revokeObjectURL(url);
-            },
-            error: (err) => console.error('Erreur téléchargement PDF', err)
-        });
-    }
+  downloadPdf(): void {
+    this.api.exportPdf().subscribe({
+      next: blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'convocations.pdf';
+        a.click();
+      },
+      error: e => console.error('Erreur PDF', e)
+    });
+  }
 }

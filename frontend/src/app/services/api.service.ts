@@ -4,32 +4,34 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Lycee, Activite, Etudiant } from '../models/models';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ApiService {
+  private api = 'http://localhost:8080/api';
 
-  private apiUrl = 'http://localhost:8080/api';
+  constructor(private http: HttpClient) {}
 
-  constructor(private http: HttpClient) { }
+  private headers(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
+  }
 
-  login(matricule: string, nom: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/login`, { matricule, nom }).pipe(
-      tap((response: any) => {
-        if (response && response.token) {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('user', JSON.stringify(response.etudiant));
+  login(matricule: string): Observable<any> {
+    return this.http.post<any>(`${this.api}/auth/login`, { matricule, nom: '' }).pipe(
+      tap((r: any) => {
+        if (r?.token) {
+          localStorage.setItem('token', r.token);
+          localStorage.setItem('user', JSON.stringify(r.etudiant));
         }
       })
     );
   }
 
   loginAdmin(username: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/login/admin`, { username, password }).pipe(
-      tap((response: any) => {
-        if (response && response.token) {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('admin', JSON.stringify({ username: response.username, role: response.role }));
+    return this.http.post<any>(`${this.api}/auth/login/admin`, { username, password }).pipe(
+      tap((r: any) => {
+        if (r?.token) {
+          localStorage.setItem('token', r.token);
+          localStorage.setItem('admin', JSON.stringify({ username: r.username, role: r.role }));
           localStorage.removeItem('user');
           localStorage.removeItem('viewer');
         }
@@ -38,16 +40,13 @@ export class ApiService {
   }
 
   loginViewer(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/login/viewer`, { username: email, password }).pipe(
-      tap((response: any) => {
-        if (response && response.token) {
-          localStorage.setItem('token', response.token);
+    return this.http.post<any>(`${this.api}/auth/login/viewer`, { username: email, password }).pipe(
+      tap((r: any) => {
+        if (r?.token) {
+          localStorage.setItem('token', r.token);
           localStorage.setItem('viewer', JSON.stringify({
-            email: response.email,
-            nom: response.nom,
-            prenom: response.prenom,
-            lyceeId: response.lyceeId,
-            lyceeName: response.lyceeName
+            email: r.email, nom: r.nom, prenom: r.prenom,
+            lyceeId: r.lyceeId, lyceeName: r.lyceeName
           }));
           localStorage.removeItem('user');
           localStorage.removeItem('admin');
@@ -56,130 +55,80 @@ export class ApiService {
     );
   }
 
-  isAdmin(): boolean {
-    return !!localStorage.getItem('admin');
-  }
-
-  isViewer(): boolean {
-    return !!localStorage.getItem('viewer');
-  }
+  logout(): void { ['token', 'user', 'admin', 'viewer'].forEach(k => localStorage.removeItem(k)); }
+  isAdmin(): boolean { return !!localStorage.getItem('admin'); }
+  isViewer(): boolean { return !!localStorage.getItem('viewer'); }
+  getToken(): string | null { return localStorage.getItem('token'); }
 
   getViewer(): any {
-    const viewer = localStorage.getItem('viewer');
-    return viewer ? JSON.parse(viewer) : null;
+    const v = localStorage.getItem('viewer');
+    return v ? JSON.parse(v) : null;
   }
 
   getAdminRole(): string | null {
-    const admin = localStorage.getItem('admin');
-    return admin ? JSON.parse(admin).role : null;
+    const a = localStorage.getItem('admin');
+    return a ? JSON.parse(a).role : null;
   }
 
-  logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('admin');
-    localStorage.removeItem('viewer');
-  }
+  // Referentiel
+  getLycees(): Observable<Lycee[]> { return this.http.get<Lycee[]>(`${this.api}/referentiel/lycees`); }
+  getActivites(): Observable<Activite[]> { return this.http.get<Activite[]>(`${this.api}/referentiel/activites`); }
 
-  getToken(): string | null {
-    return localStorage.getItem('token');
-  }
-
+  // Voeux
   getEtudiant(matricule: string): Observable<Etudiant> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<Etudiant>(`${this.apiUrl}/voeux/etudiant/${matricule}`, { headers });
-  }
-
-  private getAuthHeaders(): HttpHeaders {
-    const token = this.getToken();
-    let headers = new HttpHeaders();
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    return headers;
-  }
-
-  getLycees(): Observable<Lycee[]> {
-    return this.http.get<Lycee[]>(`${this.apiUrl}/referentiel/lycees`);
-  }
-
-  getActivites(): Observable<Activite[]> {
-    return this.http.get<Activite[]>(`${this.apiUrl}/referentiel/activites`);
+    return this.http.get<Etudiant>(`${this.api}/voeux/etudiant/${matricule}`, { headers: this.headers() });
   }
 
   saveVoeux(etudiantId: number, activitesIds: number[]): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.post(`${this.apiUrl}/voeux`, { etudiantId, activitesIds }, { headers, responseType: 'text' });
+    return this.http.post(`${this.api}/voeux`, { etudiantId, activitesIds }, { headers: this.headers(), responseType: 'text' });
   }
 
+  // Admin
   importCsv(file: File): Observable<any> {
-    const headers = this.getAuthHeaders();
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post(`${this.apiUrl}/admin/import`, formData, { headers, responseType: 'text' });
+    const fd = new FormData();
+    fd.append('file', file);
+    return this.http.post(`${this.api}/admin/import`, fd, { headers: this.headers(), responseType: 'text' });
   }
 
   runAssignment(): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.post(`${this.apiUrl}/admin/assign`, {}, { headers, responseType: 'text' });
+    return this.http.post(`${this.api}/admin/assign`, {}, { headers: this.headers(), responseType: 'text' });
   }
 
   getAffectations(): Observable<any[]> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<any[]>(`${this.apiUrl}/admin/affectations`, { headers });
+    return this.http.get<any[]>(`${this.api}/admin/affectations`, { headers: this.headers() });
   }
 
   exportPdf(): Observable<Blob> {
-    const headers = this.getAuthHeaders();
-    return this.http.get(`${this.apiUrl}/admin/export/pdf`, { headers, responseType: 'blob' });
+    return this.http.get(`${this.api}/admin/export/pdf`, { headers: this.headers(), responseType: 'blob' });
   }
 
-  // Stats & Exports
-  getGlobalStats(): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.get(`${this.apiUrl}/stats/global`, { headers });
-  }
+  // Stats
+  getGlobalStats(): Observable<any> { return this.http.get(`${this.api}/stats/global`, { headers: this.headers() }); }
+  getLyceeStats(): Observable<any[]> { return this.http.get<any[]>(`${this.api}/stats/lycee`, { headers: this.headers() }); }
+  getClasseStats(): Observable<any[]> { return this.http.get<any[]>(`${this.api}/stats/classe`, { headers: this.headers() }); }
+  exportWishes(): Observable<Blob> { return this.http.get(`${this.api}/stats/export`, { headers: this.headers(), responseType: 'blob' }); }
 
-  getLyceeStats(): Observable<any[]> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<any[]>(`${this.apiUrl}/stats/lycee`, { headers });
-  }
-
-  getClasseStats(): Observable<any[]> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<any[]>(`${this.apiUrl}/stats/classe`, { headers });
-  }
-
-  exportWishes(): Observable<Blob> {
-    const headers = this.getAuthHeaders();
-    return this.http.get(`${this.apiUrl}/stats/export`, { headers, responseType: 'blob' });
-  }
-
-  // Generic methods for database admin
+  // Generic
   get<T>(endpoint: string): Observable<T> {
-    const headers = this.getAuthHeaders();
-    const fullUrl = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    return this.http.get<T>(fullUrl, { headers });
+    const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return this.http.get<T>(url, { headers: this.headers() });
   }
 
   delete(endpoint: string): Observable<any> {
-    const headers = this.getAuthHeaders();
-    const fullUrl = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    return this.http.delete(fullUrl, { headers, responseType: 'text' });
+    const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return this.http.delete(url, { headers: this.headers(), responseType: 'text' });
   }
 
+  // Viewer
   getViewerEtudiants(lyceeId: number): Observable<Etudiant[]> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<Etudiant[]>(`${this.apiUrl}/viewer/etudiants/${lyceeId}`, { headers });
+    return this.http.get<Etudiant[]>(`${this.api}/viewer/etudiants/${lyceeId}`, { headers: this.headers() });
   }
 
   getViewerVoeux(lyceeId: number): Observable<any[]> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<any[]>(`${this.apiUrl}/viewer/voeux/${lyceeId}`, { headers });
+    return this.http.get<any[]>(`${this.api}/viewer/voeux/${lyceeId}`, { headers: this.headers() });
   }
 
   getViewerStats(lyceeId: number): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/viewer/stats/${lyceeId}`, { headers });
+    return this.http.get<any>(`${this.api}/viewer/stats/${lyceeId}`, { headers: this.headers() });
   }
 }

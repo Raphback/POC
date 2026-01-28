@@ -5,79 +5,62 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import poc.dto.AuthResponse;
 import poc.dto.LoginRequest;
+import poc.dto.AdminLoginRequest;
+import poc.model.Admin;
 import poc.model.Etudiant;
+import poc.model.Viewer;
+import poc.repository.AdminRepository;
 import poc.repository.EtudiantRepository;
+import poc.repository.ViewerRepository;
 import poc.security.JwtUtils;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private EtudiantRepository etudiantRepository;
-
-    @Autowired
-    private JwtUtils jwtUtils;
-
-    @Autowired
-    private poc.repository.AdminRepository adminRepository;
+    @Autowired private EtudiantRepository etudiantRepository;
+    @Autowired private AdminRepository adminRepository;
+    @Autowired private ViewerRepository viewerRepository;
+    @Autowired private JwtUtils jwtUtils;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        Optional<Etudiant> etudiantOpt = etudiantRepository.findByMatriculeCsv(loginRequest.getMatricule());
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        Optional<Etudiant> etudiant = etudiantRepository.findByMatriculeCsv(request.getMatricule());
+        if (etudiant.isEmpty()) etudiant = etudiantRepository.findByIne(request.getMatricule());
 
-        if (etudiantOpt.isEmpty()) {
-            etudiantOpt = etudiantRepository.findByIne(loginRequest.getMatricule());
+        if (etudiant.isPresent()) {
+            String token = jwtUtils.generateToken(etudiant.get().getMatriculeCsv());
+            return ResponseEntity.ok(new AuthResponse(token, etudiant.get()));
         }
-
-        if (etudiantOpt.isPresent()) {
-            Etudiant etudiant = etudiantOpt.get();
-            String token = jwtUtils.generateToken(etudiant.getMatriculeCsv());
-            return ResponseEntity.ok(new AuthResponse(token, etudiant));
-        }
-
-        return ResponseEntity.status(401).body("Identifiant incorrect (Matricule ou INE introuvable)");
+        return ResponseEntity.status(401).body("Identifiant incorrect");
     }
 
     @PostMapping("/login/admin")
-    public ResponseEntity<?> loginAdmin(@RequestBody poc.dto.AdminLoginRequest loginRequest) {
-        Optional<poc.model.Admin> adminOpt = adminRepository.findByUsername(loginRequest.getUsername());
-
-        if (adminOpt.isPresent()) {
-            poc.model.Admin admin = adminOpt.get();
-            if (admin.getPassword().equals(loginRequest.getPassword())) {
-                String token = jwtUtils.generateToken(admin.getUsername());
-                return ResponseEntity.ok(java.util.Map.of(
-                        "token", token,
-                        "role", admin.getRole(),
-                        "username", admin.getUsername()));
-            }
+    public ResponseEntity<?> loginAdmin(@RequestBody AdminLoginRequest request) {
+        Optional<Admin> admin = adminRepository.findByUsername(request.getUsername());
+        if (admin.isPresent() && admin.get().getPassword().equals(request.getPassword())) {
+            String token = jwtUtils.generateToken(admin.get().getUsername());
+            return ResponseEntity.ok(Map.of(
+                    "token", token,
+                    "role", admin.get().getRole(),
+                    "username", admin.get().getUsername()));
         }
         return ResponseEntity.status(401).body("Identifiants Admin incorrects");
     }
 
-    @Autowired
-    private poc.repository.ViewerRepository viewerRepository;
-
     @PostMapping("/login/viewer")
-    public ResponseEntity<?> loginViewer(@RequestBody poc.dto.AdminLoginRequest loginRequest) {
-        Optional<poc.model.Viewer> viewerOpt = viewerRepository.findByEmail(loginRequest.getUsername().toLowerCase());
-
-        if (viewerOpt.isPresent()) {
-            poc.model.Viewer viewer = viewerOpt.get();
-            if (viewer.getPassword().equals(loginRequest.getPassword())) {
-                String token = jwtUtils.generateToken(viewer.getEmail());
-                return ResponseEntity.ok(java.util.Map.of(
-                        "token", token,
-                        "role", "VIEWER",
-                        "email", viewer.getEmail(),
-                        "nom", viewer.getNom(),
-                        "prenom", viewer.getPrenom(),
-                        "lyceeId", viewer.getLycee().getId(),
-                        "lyceeName", viewer.getLycee().getNom()));
-            }
+    public ResponseEntity<?> loginViewer(@RequestBody AdminLoginRequest request) {
+        Optional<Viewer> viewer = viewerRepository.findByEmail(request.getUsername().toLowerCase());
+        if (viewer.isPresent() && viewer.get().getPassword().equals(request.getPassword())) {
+            Viewer v = viewer.get();
+            String token = jwtUtils.generateToken(v.getEmail());
+            return ResponseEntity.ok(Map.of(
+                    "token", token, "role", "VIEWER",
+                    "email", v.getEmail(), "nom", v.getNom(), "prenom", v.getPrenom(),
+                    "lyceeId", v.getLycee().getId(), "lyceeName", v.getLycee().getNom()));
         }
         return ResponseEntity.status(401).body("Identifiants Viewer incorrects");
     }

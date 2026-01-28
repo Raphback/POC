@@ -2,44 +2,31 @@ import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
 
 @Component({
-    selector: 'app-statistics-dashboard',
-    templateUrl: './statistics-dashboard.component.html',
-    styleUrls: ['./statistics-dashboard.component.css']
+  selector: 'app-statistics-dashboard',
+  templateUrl: './statistics-dashboard.component.html',
+  styleUrls: ['./statistics-dashboard.component.css']
 })
 export class StatisticsDashboardComponent implements OnInit {
-    loading: boolean = false;
-    statistics: any = null;
-    error: string = '';
+  loading = false;
+  statistics: any = null;
+  error = '';
 
-    constructor(private apiService: ApiService) { }
+  constructor(private api: ApiService) {}
 
-    ngOnInit(): void {
-        this.loadStatistics();
-    }
+  ngOnInit(): void { this.loadStatistics(); }
 
-    loadStatistics(): void {
-        this.loading = true;
-        this.error = '';
+  loadStatistics(): void {
+    this.loading = true;
+    this.error = '';
+    this.api.get('/api/admin/statistics').subscribe({
+      next: (d: any) => { this.statistics = d; this.loading = false; },
+      error: (e: any) => { this.error = `Erreur: ${e.message}`; this.loading = false; }
+    });
+  }
 
-        this.apiService.get('/api/admin/statistics').subscribe({
-            next: (data: any) => {
-                this.statistics = data;
-                this.loading = false;
-            },
-            error: (err: any) => {
-                this.error = `Erreur lors du chargement des statistiques: ${err.message}`;
-                this.loading = false;
-            }
-        });
-    }
+  getObjectKeys(obj: any): string[] { return obj ? Object.keys(obj) : []; }
 
-    getObjectKeys(obj: any): string[] {
-        return obj ? Object.keys(obj) : [];
-    }
-
-    getPercentageClass(percentage: number): string {
-        if (percentage >= 80) return 'text-success';
-        if (percentage >= 50) return 'text-warning';
-        return 'text-danger';
-    }
+  getPercentageClass(p: number): string {
+    return p >= 80 ? 'text-success' : p >= 50 ? 'text-warning' : 'text-danger';
+  }
 }

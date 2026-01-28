@@ -1,6 +1,7 @@
 package poc.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import poc.model.Voeu;
 
@@ -10,6 +11,9 @@ import java.util.List;
 public interface VoeuRepository extends JpaRepository<Voeu, Long> {
     List<Voeu> findByEtudiantId(Long etudiantId);
 
-    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT v.etudiant.id FROM Voeu v")
+    @Query("SELECT DISTINCT v.etudiant.id FROM Voeu v")
     List<Long> findEtudiantsWithVoeux();
+
+    @Query("SELECT v FROM Voeu v WHERE v.etudiant.lycee.id = :lyceeId")
+    List<Voeu> findByEtudiantLyceeId(Long lyceeId);
 }

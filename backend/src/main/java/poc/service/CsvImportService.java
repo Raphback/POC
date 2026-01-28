@@ -9,127 +9,83 @@ import poc.model.Lycee;
 import poc.repository.EtudiantRepository;
 import poc.repository.LyceeRepository;
 
-import java.io.InputStream;
 import java.util.Iterator;
 
 @Service
 public class CsvImportService {
 
-    @Autowired
-    private EtudiantRepository etudiantRepository;
+    @Autowired private EtudiantRepository etudiantRepository;
+    @Autowired private LyceeRepository lyceeRepository;
 
-    @Autowired
-    private LyceeRepository lyceeRepository;
+    private final DataFormatter fmt = new DataFormatter();
 
     public void importerEleves(MultipartFile file) throws Exception {
         String filename = file.getOriginalFilename();
-        if (filename != null && (filename.endsWith(".xls") || filename.endsWith(".xlsx"))) {
-            importerExcel(file.getInputStream());
-        } else {
-            throw new RuntimeException("Format de fichier non supporté (attendu : .xls ou .xlsx)");
+        if (filename == null || (!filename.endsWith(".xls") && !filename.endsWith(".xlsx"))) {
+            throw new RuntimeException("Format non supporte (attendu : .xls ou .xlsx)");
+        }
+
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            Iterator<Row> rows = workbook.getSheetAt(0).iterator();
+            if (!rows.hasNext()) return;
+
+            String header = getRowAsString(rows.next());
+            if (header.contains("INE")) {
+                importFormatBrassens(rows);
+            } else if (header.contains("Division")) {
+                importFormatFauriel(rows);
+            } else {
+                throw new RuntimeException("Format de colonnes inconnu.");
+            }
         }
     }
 
-    private void importerExcel(InputStream inputStream) throws Exception {
-        Workbook workbook = WorkbookFactory.create(inputStream);
-        Sheet sheet = workbook.getSheetAt(0);
-        Iterator<Row> rowIterator = sheet.iterator();
-
-        if (!rowIterator.hasNext()) return;
-
-        // Analyse du Header pour déterminer le format
-        Row headerRow = rowIterator.next();
-        String headerString = getRowAsString(headerRow);
-
-        if (headerString.contains("INE")) {
-            importerFormatBrassens(rowIterator);
-        } else if (headerString.contains("Division")) {
-            importerFormatFauriel(rowIterator);
-        } else {
-            throw new RuntimeException("Format de colonnes inconnu. Vérifiez les en-têtes.");
-        }
-        workbook.close();
-    }
-
-    private void importerFormatBrassens(Iterator<Row> rowIterator) {
-        // Colonnes : Etablissement, Nom, Prénom, INE, Classe
-        // Adaptation: On suppose que la colonne 5 ou 6 pourrait être "Demi-journée" si elle existe
-        while (rowIterator.hasNext()) {
-            Row row = rowIterator.next();
+    private void importFormatBrassens(Iterator<Row> rows) {
+        while (rows.hasNext()) {
+            Row row = rows.next();
             if (isRowEmpty(row)) continue;
-
-            String nomLycee = getCellValue(row, 0);
-            String nom = getCellValue(row, 1);
-            String prenom = getCellValue(row, 2);
-            String ine = getCellValue(row, 3);
-            String classe = getCellValue(row, 4);
-            // On tente de lire une potentielle colonne demi-journée (index 5)
-            String demiJournee = getCellValue(row, 5);
-
-            sauvegarderEtudiant(ine, nom, prenom, nomLycee, classe, "Générale", demiJournee);
+            sauvegarder(cell(row, 3), cell(row, 1), cell(row, 2),
+                    cell(row, 0), cell(row, 4), "Generale", cell(row, 5));
         }
     }
 
-    private void importerFormatFauriel(Iterator<Row> rowIterator) {
-        // Colonnes : Nom, Prénom, Date de naissance, Sexe, Regime, Division, MEF, Options
-        while (rowIterator.hasNext()) {
-            Row row = rowIterator.next();
+    private void importFormatFauriel(Iterator<Row> rows) {
+        while (rows.hasNext()) {
+            Row row = rows.next();
             if (isRowEmpty(row)) continue;
-
-            String nom = getCellValue(row, 0);
-            String prenom = getCellValue(row, 1);
-            String division = getCellValue(row, 5); // Classe
-            String mef = getCellValue(row, 6);      // Série
-            // On tente de lire une potentielle colonne demi-journée (index 8 par exemple, ou à la fin)
-            // Pour l'instant on laisse vide ou on prend index 8 si existe
-            String demiJournee = getCellValue(row, 8);
-
-            // Génération d'un ID technique car pas d'INE
-            String matricule = "FAURIEL_" + nom.toUpperCase().replaceAll("[^A-Z]", "") + "_" + prenom.toUpperCase().replaceAll("[^A-Z]", "");
-            
-            sauvegarderEtudiant(matricule, nom, prenom, "LGT Fauriel", division, mef, demiJournee);
+            String nom = cell(row, 0), prenom = cell(row, 1);
+            String matricule = "FAURIEL_" + nom.toUpperCase().replaceAll("[^A-Z]", "")
+                    + "_" + prenom.toUpperCase().replaceAll("[^A-Z]", "");
+            sauvegarder(matricule, nom, prenom, "LGT Fauriel", cell(row, 5), cell(row, 6), cell(row, 8));
         }
     }
 
-    private void sauvegarderEtudiant(String matricule, String nom, String prenom, String nomLycee, String classe, String serie, String demiJournee) {
+    private void sauvegarder(String matricule, String nom, String prenom,
+                             String nomLycee, String classe, String serie, String demiJournee) {
         if (matricule == null || matricule.isEmpty()) return;
 
-        // Gestion du Lycée
         Lycee lycee = lyceeRepository.findByNom(nomLycee)
-                .orElseGet(() -> {
-                    Lycee newLycee = new Lycee();
-                    newLycee.setNom(nomLycee);
-                    return lyceeRepository.save(newLycee);
-                });
+                .orElseGet(() -> { Lycee l = new Lycee(); l.setNom(nomLycee); return lyceeRepository.save(l); });
 
-        // Gestion de l'Étudiant
-        Etudiant etudiant = etudiantRepository.findByMatriculeCsv(matricule)
-                .orElse(new Etudiant());
-
-        etudiant.setMatriculeCsv(matricule);
-        etudiant.setNom(nom);
-        etudiant.setPrenom(prenom);
-        etudiant.setLycee(lycee);
-        etudiant.setClasse(classe);
-        etudiant.setSerieBac(serie);
-        if (demiJournee != null && !demiJournee.isEmpty()) {
-            etudiant.setDemiJournee(demiJournee);
-        }
-
-        etudiantRepository.save(etudiant);
+        Etudiant e = etudiantRepository.findByMatriculeCsv(matricule).orElse(new Etudiant());
+        e.setMatriculeCsv(matricule);
+        e.setNom(nom);
+        e.setPrenom(prenom);
+        e.setLycee(lycee);
+        e.setClasse(classe);
+        e.setSerieBac(serie);
+        if (demiJournee != null && !demiJournee.isEmpty()) e.setDemiJournee(demiJournee);
+        etudiantRepository.save(e);
     }
 
-    private String getCellValue(Row row, int index) {
-        Cell cell = row.getCell(index, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
-        if (cell == null) return "";
-        return new DataFormatter().formatCellValue(cell).trim();
+    private String cell(Row row, int index) {
+        Cell c = row.getCell(index, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+        return c == null ? "" : fmt.formatCellValue(c).trim();
     }
 
     private String getRowAsString(Row row) {
         StringBuilder sb = new StringBuilder();
-        for (Cell cell : row) {
-            sb.append(getCellValue(row, cell.getColumnIndex())).append(" ");
-        }
+        for (Cell c : row) sb.append(cell(row, c.getColumnIndex())).append(" ");
         return sb.toString();
     }
 
@@ -137,8 +93,7 @@ public class CsvImportService {
         if (row == null) return true;
         for (int c = row.getFirstCellNum(); c < row.getLastCellNum(); c++) {
             Cell cell = row.getCell(c);
-            if (cell != null && cell.getCellType() != CellType.BLANK)
-                return false;
+            if (cell != null && cell.getCellType() != CellType.BLANK) return false;
         }
         return true;
     }

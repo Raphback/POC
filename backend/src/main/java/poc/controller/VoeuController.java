@@ -10,12 +10,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/voeux")
-@CrossOrigin(origins = "http://localhost:4200")
 public class VoeuController {
 
     @Autowired
     private VoeuService voeuService;
-
     @Autowired
     private poc.repository.EtudiantRepository etudiantRepository;
 
@@ -29,31 +27,15 @@ public class VoeuController {
     @PostMapping(produces = "text/plain")
     public ResponseEntity<String> enregistrerVoeux(@RequestBody Map<String, Object> payload) {
         try {
-            System.out.println("🔍 Payload reçu : " + payload);
-            
-            // Extraction basique des données (à améliorer avec un DTO)
             Long etudiantId = Long.valueOf(payload.get("etudiantId").toString());
             List<?> rawIds = (List<?>) payload.get("activitesIds");
-            
-            System.out.println("📊 EtudiantId: " + etudiantId);
-            System.out.println("📊 RawIds: " + rawIds);
-            
-            List<Long> activitesIds = rawIds.stream().map(id -> {
-                if (id instanceof Number) {
-                    return ((Number) id).longValue();
-                } else {
-                    return Long.parseLong(id.toString());
-                }
-            }).toList();
-            
-            System.out.println("✅ Activités IDs convertis: " + activitesIds);
+            List<Long> activitesIds = rawIds.stream()
+                    .map(id -> id instanceof Number ? ((Number) id).longValue() : Long.parseLong(id.toString()))
+                    .toList();
 
             voeuService.enregistrerVoeux(etudiantId, activitesIds);
-            System.out.println("✅ Vœux enregistrés avec succès pour l'étudiant " + etudiantId);
-            return ResponseEntity.ok("Vœux enregistrés avec succès !");
+            return ResponseEntity.ok("Voeux enregistres avec succes !");
         } catch (Exception e) {
-            System.err.println("❌ Erreur lors de l'enregistrement des vœux:");
-            e.printStackTrace();
             return ResponseEntity.badRequest().body("Erreur : " + e.getMessage());
         }
     }

@@ -1,133 +1,97 @@
 package poc.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import poc.service.CsvImportService;
+import poc.model.*;
+import poc.repository.*;
+import poc.service.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "http://localhost:4200")
 public class AdminController {
 
-    @Autowired
-    private CsvImportService csvImportService;
-
-    @Autowired
-    private poc.service.AssignmentService assignmentService;
-
-    @Autowired
-    private poc.service.PdfService pdfService;
+    @Autowired private CsvImportService importService;
+    @Autowired private AssignmentService assignmentService;
+    @Autowired private PdfService pdfService;
+    @Autowired private StatisticsService statisticsService;
+    @Autowired private EtudiantRepository etudiantRepository;
+    @Autowired private VoeuRepository voeuRepository;
+    @Autowired private ActiviteRepository activiteRepository;
+    @Autowired private LyceeRepository lyceeRepository;
 
     @PostMapping("/import")
     public ResponseEntity<String> importData(@RequestParam("file") MultipartFile file) {
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("Fichier vide");
-        }
-
+        if (file.isEmpty()) return ResponseEntity.badRequest().body("Fichier vide");
         try {
-            csvImportService.importerEleves(file);
-            return ResponseEntity.ok("Import réussi !");
+            importService.importerEleves(file);
+            return ResponseEntity.ok("Import reussi !");
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body("Erreur lors de l'import : " + e.getMessage());
+            return ResponseEntity.badRequest().body("Erreur import : " + e.getMessage());
         }
     }
 
     @PostMapping("/assign")
     public ResponseEntity<String> runAssignment() {
         try {
-            String result = assignmentService.runAssignment();
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(assignmentService.runAssignment());
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Erreur lors de l'affectation : " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Erreur affectation : " + e.getMessage());
         }
     }
 
     @GetMapping("/affectations")
-    public ResponseEntity<java.util.List<poc.model.Affectation>> getAffectations() {
+    public ResponseEntity<List<Affectation>> getAffectations() {
         return ResponseEntity.ok(assignmentService.getAllAffectations());
     }
 
     @GetMapping("/export/pdf")
-    public ResponseEntity<org.springframework.core.io.InputStreamResource> exportPdf() {
-        java.io.ByteArrayInputStream bis = pdfService.generateTickets(assignmentService.getAllAffectations());
-
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.add("Content-Disposition", "attachment; filename=convocations.pdf");
-
-        return ResponseEntity
-                .ok()
-                .headers(headers)
-                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
-                .body(new org.springframework.core.io.InputStreamResource(bis));
+    public ResponseEntity<InputStreamResource> exportPdf() {
+        var bis = pdfService.generateTickets(assignmentService.getAllAffectations());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=convocations.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(bis));
     }
 
-    // Database Admin Endpoints
-    @Autowired
-    private poc.repository.EtudiantRepository etudiantRepository;
-
-    @Autowired
-    private poc.repository.VoeuRepository voeuRepository;
-
-    @Autowired
-    private poc.repository.ActiviteRepository activiteRepository;
-
-    @Autowired
-    private poc.repository.LyceeRepository lyceeRepository;
-
+    // Database CRUD
     @GetMapping("/etudiants")
-    public ResponseEntity<java.util.List<poc.model.Etudiant>> getAllEtudiants() {
-        return ResponseEntity.ok(etudiantRepository.findAll());
-    }
+    public List<Etudiant> getAllEtudiants() { return etudiantRepository.findAll(); }
+
+    @GetMapping("/voeux")
+    public List<Voeu> getAllVoeux() { return voeuRepository.findAll(); }
 
     @DeleteMapping("/etudiants/{id}")
     public ResponseEntity<String> deleteEtudiant(@PathVariable Long id) {
-        try {
-            etudiantRepository.deleteById(id);
-            return ResponseEntity.ok("Étudiant supprimé avec succès");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erreur lors de la suppression : " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/voeux")
-    public ResponseEntity<java.util.List<poc.model.Voeu>> getAllVoeux() {
-        return ResponseEntity.ok(voeuRepository.findAll());
+        return deleteEntity(() -> etudiantRepository.deleteById(id), "Etudiant");
     }
 
     @DeleteMapping("/activites/{id}")
     public ResponseEntity<String> deleteActivite(@PathVariable Long id) {
-        try {
-            activiteRepository.deleteById(id);
-            return ResponseEntity.ok("Activité supprimée avec succès");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erreur lors de la suppression : " + e.getMessage());
-        }
+        return deleteEntity(() -> activiteRepository.deleteById(id), "Activite");
     }
 
     @DeleteMapping("/lycees/{id}")
     public ResponseEntity<String> deleteLycee(@PathVariable Long id) {
-        try {
-            lyceeRepository.deleteById(id);
-            return ResponseEntity.ok("Lycée supprimé avec succès");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erreur lors de la suppression : " + e.getMessage());
-        }
+        return deleteEntity(() -> lyceeRepository.deleteById(id), "Lycee");
     }
-
-    @Autowired
-    private poc.service.StatisticsService statisticsService;
 
     @GetMapping("/statistics")
-    public ResponseEntity<java.util.Map<String, Object>> getStatistics() {
-        return ResponseEntity.ok(statisticsService.getGlobalStatistics());
-    }
+    public Map<String, Object> getStatistics() { return statisticsService.getGlobalStatistics(); }
 
-    @GetMapping("/statistics/lycee/{id}")
-    public ResponseEntity<java.util.Map<String, Object>> getStatisticsByLycee(@PathVariable Long id) {
-        return ResponseEntity.ok(statisticsService.getStatisticsByLycee(id));
+    private ResponseEntity<String> deleteEntity(Runnable action, String name) {
+        try {
+            action.run();
+            return ResponseEntity.ok(name + " supprime");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erreur suppression : " + e.getMessage());
+        }
     }
 }

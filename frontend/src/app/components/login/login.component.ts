@@ -4,86 +4,48 @@ import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 
 @Component({
-    selector: 'app-login',
-    templateUrl: './login.component.html',
-    styleUrls: ['./login.component.css']
+  selector: 'app-login',
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-    loginForm: FormGroup;
-    errorMessage: string = '';
+  loginForm: FormGroup;
+  errorMessage = '';
+  loginMode: 'student' | 'admin' | 'viewer' = 'student';
 
-    loginMode: 'student' | 'admin' | 'viewer' = 'student';
+  private routes = { student: '/voeux', admin: '/database', viewer: '/viewer' };
+  private errors = { student: 'Identifiant incorrect.', admin: 'Identifiants Admin incorrects.', viewer: 'Identifiants Professeur incorrects.' };
 
-    constructor(
-        private fb: FormBuilder,
-        private apiService: ApiService,
-        private router: Router
-    ) {
-        this.loginForm = this.fb.group({
-            matricule: ['', Validators.required],
-            username: [''],
-            password: ['']
-        });
+  constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {
+    this.loginForm = this.fb.group({ matricule: [''], username: [''], password: [''] });
+    this.setLoginMode('student');
+  }
+
+  setLoginMode(mode: 'student' | 'admin' | 'viewer'): void {
+    this.loginMode = mode;
+    this.errorMessage = '';
+    ['matricule', 'username', 'password'].forEach(f => this.loginForm.get(f)?.clearValidators());
+
+    if (mode === 'student') {
+      this.loginForm.get('matricule')?.setValidators(Validators.required);
+    } else {
+      this.loginForm.get('username')?.setValidators(Validators.required);
+      this.loginForm.get('password')?.setValidators(Validators.required);
     }
+    ['matricule', 'username', 'password'].forEach(f => this.loginForm.get(f)?.updateValueAndValidity());
+  }
 
-    setLoginMode(mode: 'student' | 'admin' | 'viewer'): void {
-        this.loginMode = mode;
-        this.errorMessage = '';
-        
-        // Clear all validators first
-        this.loginForm.get('matricule')?.clearValidators();
-        this.loginForm.get('username')?.clearValidators();
-        this.loginForm.get('password')?.clearValidators();
+  onSubmit(): void {
+    if (!this.loginForm.valid) return;
+    const { matricule, username, password } = this.loginForm.value;
 
-        if (mode === 'student') {
-            this.loginForm.get('matricule')?.setValidators(Validators.required);
-        } else {
-            // Both admin and viewer need username/password
-            this.loginForm.get('username')?.setValidators(Validators.required);
-            this.loginForm.get('password')?.setValidators(Validators.required);
-        }
+    const login$ = this.loginMode === 'student' ? this.api.login(matricule)
+                 : this.loginMode === 'admin' ? this.api.loginAdmin(username, password)
+                 : this.api.loginViewer(username, password);
 
-        this.loginForm.get('matricule')?.updateValueAndValidity();
-        this.loginForm.get('username')?.updateValueAndValidity();
-        this.loginForm.get('password')?.updateValueAndValidity();
-    }
-
-    onSubmit(): void {
-        if (this.loginForm.valid) {
-            if (this.loginMode === 'admin') {
-                const { username, password } = this.loginForm.value;
-                this.apiService.loginAdmin(username, password).subscribe({
-                    next: () => {
-                        this.router.navigate(['/database']);
-                    },
-                    error: (err) => {
-                        this.errorMessage = 'Identifiants Admin incorrects.';
-                        console.error('Admin Login error', err);
-                    }
-                });
-            } else if (this.loginMode === 'viewer') {
-                const { username, password } = this.loginForm.value;
-                this.apiService.loginViewer(username, password).subscribe({
-                    next: () => {
-                        this.router.navigate(['/viewer']);
-                    },
-                    error: (err) => {
-                        this.errorMessage = 'Identifiants Professeur incorrects.';
-                        console.error('Viewer Login error', err);
-                    }
-                });
-            } else {
-                const { matricule } = this.loginForm.value;
-                this.apiService.login(matricule, '').subscribe({
-                    next: () => {
-                        this.router.navigate(['/voeux']);
-                    },
-                    error: (err) => {
-                        this.errorMessage = 'Identifiant incorrect. Veuillez réessayer.';
-                        console.error('Login error', err);
-                    }
-                });
-            }
-        }
-    }
+    login$.subscribe({
+      next: () => this.router.navigate([this.routes[this.loginMode]]),
+      error: () => this.errorMessage = this.errors[this.loginMode]
+    });
+  }
 }

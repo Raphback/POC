@@ -1,404 +1,189 @@
 package poc.service;
 
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import poc.model.Etudiant;
 import poc.model.Lycee;
+import poc.model.Activite;
+import poc.model.TypeActivite;
+import poc.model.Voeu;
+import poc.repository.ActiviteRepository;
 import poc.repository.EtudiantRepository;
 import poc.repository.LyceeRepository;
+import poc.repository.ViewerRepository;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 @Service
 public class ExcelService {
 
-    public void importStudents(String folderPath, EtudiantRepository etudiantRepository,
-            LyceeRepository lyceeRepository) {
-        File folder = new File(folderPath);
-        if (!folder.exists()) {
-            return;
-        }
+    public void importStudents(String folderPath, EtudiantRepository etudiantRepo, LyceeRepository lyceeRepo) {
+        DataFormatter fmt = new DataFormatter();
+        Map<String, Lycee> cache = buildLyceeCache(lyceeRepo);
 
-        Map<String, Lycee> lyceeCache = new HashMap<>();
-        lyceeRepository.findAll().forEach(l -> lyceeCache.put(l.getNom().toUpperCase(), l));
+        for (File file : getExcelFiles(folderPath)) {
+            try (FileInputStream fis = new FileInputStream(file);
+                 Workbook wb = WorkbookFactory.create(fis)) {
 
-        File[] files = folder.listFiles();
-        if (files == null)
-            return;
+                for (Row row : wb.getSheetAt(0)) {
+                    if (row.getRowNum() == 0) continue;
 
-        DataFormatter formatter = new DataFormatter();
+                    String lycee = fmt.formatCellValue(row.getCell(0)).trim();
+                    String nom = fmt.formatCellValue(row.getCell(1)).trim();
+                    String prenom = fmt.formatCellValue(row.getCell(2)).trim();
+                    String matricule = fmt.formatCellValue(row.getCell(3)).trim();
+                    String classe = fmt.formatCellValue(row.getCell(4)).trim();
 
-        for (File file : files) {
-            if (file.getName().endsWith(".xlsx") || file.getName().endsWith(".xls")) {
-                if (file.getName().equalsIgnoreCase("capacites.xlsx"))
-                    continue;
-                try (FileInputStream fis = new FileInputStream(file);
-                        Workbook workbook = WorkbookFactory.create(fis)) {
+                    if (matricule.isEmpty() || nom.isEmpty() || matricule.contains("@")) continue;
+                    if (etudiantRepo.findByMatriculeCsv(matricule).isPresent()) continue;
 
-                    Sheet sheet = workbook.getSheetAt(0);
-                    int count = 0;
-                    for (Row row : sheet) {
-                        if (row.getRowNum() == 0)
-                            continue;
-
-                        String lyceeName = formatter.formatCellValue(row.getCell(0)).trim();
-                        String nom = formatter.formatCellValue(row.getCell(1)).trim();
-                        String prenom = formatter.formatCellValue(row.getCell(2)).trim();
-                        String matricule = formatter.formatCellValue(row.getCell(3)).trim();
-                        String classe = formatter.formatCellValue(row.getCell(4)).trim();
-
-                        if (matricule.isEmpty() || nom.isEmpty())
-                            continue;
-
-                        Lycee lycee = lyceeCache.get(lyceeName.toUpperCase());
-                        if (lycee == null) {
-                            lycee = new Lycee();
-                            lycee.setNom(lyceeName);
-                            lycee = lyceeRepository.save(lycee);
-                            lyceeCache.put(lyceeName.toUpperCase(), lycee);
-                        }
-
-                        if (matricule.contains("@")) {
-                            continue;
-                        }
-
-                        if (etudiantRepository.findByMatriculeCsv(matricule).isPresent()) {
-                            continue;
-                        }
-
-                        Etudiant etudiant = new Etudiant();
-                        etudiant.setMatriculeCsv(matricule);
-                        etudiant.setNom(nom);
-                        etudiant.setPrenom(prenom);
-                        etudiant.setClasse(classe);
-                        etudiant.setLycee(lycee);
-                        etudiant.setSerieBac("Générale"); // Defaulting for now
-                        etudiant.setDemiJournee("DJ1"); // Default
-
-                        etudiantRepository.save(etudiant);
-                        count++;
-                    }
-
-                } catch (Exception e) {
-                    System.err.println("Error importing " + file.getName() + ": " + e.getMessage());
+                    Etudiant e = new Etudiant();
+                    e.setMatriculeCsv(matricule);
+                    e.setNom(nom);
+                    e.setPrenom(prenom);
+                    e.setClasse(classe);
+                    e.setLycee(getOrCreateLycee(lycee, cache, lyceeRepo));
+                    e.setSerieBac("Generale");
+                    e.setDemiJournee("DJ1");
+                    etudiantRepo.save(e);
                 }
+            } catch (Exception ex) {
+                System.err.println("Error importing " + file.getName() + ": " + ex.getMessage());
             }
         }
     }
 
-    /**
-     * Import professors as Viewers from Excel files
-     */
-    public void importViewers(String folderPath, poc.repository.ViewerRepository viewerRepository,
-            LyceeRepository lyceeRepository) {
-        File folder = new File(folderPath);
-        if (!folder.exists()) {
-            return;
-        }
+    public void importViewers(String folderPath, ViewerRepository viewerRepo, LyceeRepository lyceeRepo) {
+        DataFormatter fmt = new DataFormatter();
+        Map<String, Lycee> cache = buildLyceeCache(lyceeRepo);
 
-        Map<String, Lycee> lyceeCache = new HashMap<>();
-        lyceeRepository.findAll().forEach(l -> lyceeCache.put(l.getNom().toUpperCase(), l));
+        for (File file : getExcelFiles(folderPath)) {
+            try (FileInputStream fis = new FileInputStream(file);
+                 Workbook wb = WorkbookFactory.create(fis)) {
 
-        File[] files = folder.listFiles();
-        if (files == null)
-            return;
+                for (Row row : wb.getSheetAt(0)) {
+                    if (row.getRowNum() == 0) continue;
 
-        DataFormatter formatter = new DataFormatter();
-        int viewerCount = 0;
+                    String lycee = fmt.formatCellValue(row.getCell(0)).trim();
+                    String nom = fmt.formatCellValue(row.getCell(1)).trim();
+                    String prenom = fmt.formatCellValue(row.getCell(2)).trim();
+                    String email = fmt.formatCellValue(row.getCell(3)).trim().toLowerCase();
 
-        for (File file : files) {
-            if (file.getName().endsWith(".xlsx") || file.getName().endsWith(".xls")) {
-                if (file.getName().equalsIgnoreCase("capacites.xlsx"))
-                    continue;
+                    if (email.isEmpty() || !email.contains("@")) continue;
+                    if (viewerRepo.existsByEmail(email)) continue;
 
-                try (FileInputStream fis = new FileInputStream(file);
-                        Workbook workbook = WorkbookFactory.create(fis)) {
-
-                    Sheet sheet = workbook.getSheetAt(0);
-                    for (Row row : sheet) {
-                        if (row.getRowNum() == 0)
-                            continue;
-
-                        String lyceeName = formatter.formatCellValue(row.getCell(0)).trim();
-                        String nom = formatter.formatCellValue(row.getCell(1)).trim();
-                        String prenom = formatter.formatCellValue(row.getCell(2)).trim();
-                        String matricule = formatter.formatCellValue(row.getCell(3)).trim();
-
-                        if (matricule.isEmpty() || nom.isEmpty())
-                            continue;
-
-                        if (!matricule.contains("@"))
-                            continue;
-
-                        String email = matricule.toLowerCase();
-
-                        if (viewerRepository.existsByEmail(email))
-                            continue;
-
-                        Lycee lycee = lyceeCache.get(lyceeName.toUpperCase());
-                        if (lycee == null) {
-                            lycee = new Lycee();
-                            lycee.setNom(lyceeName);
-                            lycee = lyceeRepository.save(lycee);
-                            lyceeCache.put(lyceeName.toUpperCase(), lycee);
-                        }
-
-                        String password = "viewer123";
-
-                        poc.model.Viewer viewer = new poc.model.Viewer(email, password, nom, prenom, lycee);
-                        viewerRepository.save(viewer);
-                        viewerCount++;
-
-                    }
-                } catch (Exception e) {
-                    System.err.println("Error importing viewers from " + file.getName() + ": " + e.getMessage());
+                    viewerRepo.save(new poc.model.Viewer(
+                            email, "viewer123", nom, prenom,
+                            getOrCreateLycee(lycee, cache, lyceeRepo)));
                 }
-            }
-        }
-
-    }
-
-    private String generatePassword(java.util.Random random) {
-        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 6; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return sb.toString();
-    }
-
-    // Keep inspectHeaders for debugging if needed
-    public void inspectHeaders(String folderPath) {
-        File folder = new File(folderPath);
-        if (!folder.exists()) {
-            System.out.println("❌ Folder not found: " + folderPath);
-            return;
-        }
-
-        File[] files = folder.listFiles();
-        if (files == null)
-            return;
-
-        for (File file : files) {
-            if (file.getName().endsWith(".xlsx") || file.getName().endsWith(".xls")) {
-                System.out.println("📂 Inspecting: " + file.getName());
-                try (FileInputStream fis = new FileInputStream(file);
-                        Workbook workbook = WorkbookFactory.create(fis)) {
-
-                    Sheet sheet = workbook.getSheetAt(0);
-                    Row headerRow = sheet.getRow(0);
-                    if (headerRow != null) {
-                        System.out.print("   Headers: ");
-                        for (Cell cell : headerRow) {
-                            System.out.print("[" + cell.toString() + "] ");
-                        }
-                        System.out.println();
-                    }
-
-                    Row dataRow = sheet.getRow(1);
-                    if (dataRow != null) {
-                        System.out.print("   Row 1: ");
-                        for (Cell cell : dataRow) {
-                            System.out.print("[" + cell.toString() + "] ");
-                        }
-                        System.out.println();
-                    }
-                } catch (Exception e) {
-                    System.err.println("Error reading " + file.getName() + ": " + e.getMessage());
-                }
+            } catch (Exception ex) {
+                System.err.println("Error importing viewers from " + file.getName() + ": " + ex.getMessage());
             }
         }
     }
 
-    public void importActivities(String folderPath, poc.repository.ActiviteRepository activiteRepository) {
+    public void importActivities(String folderPath, ActiviteRepository activiteRepo) {
         File file = new File(folderPath + "/capacites.xlsx");
-        if (!file.exists()) {
-            System.out.println("❌ Activities file not found: " + file.getAbsolutePath());
-            return;
-        }
+        if (!file.exists()) return;
 
-        System.out.println("📂 Importing Activities (Mapping Titles to Rooms)...");
-        DataFormatter formatter = new DataFormatter();
-
-        // 1. Load all rooms from Excel
-        java.util.List<String> amphis = new java.util.ArrayList<>();
-        java.util.List<String> tds = new java.util.ArrayList<>();
-        Map<String, Integer> roomCapacities = new HashMap<>();
+        DataFormatter fmt = new DataFormatter();
+        List<String> amphis = new ArrayList<>(), tds = new ArrayList<>();
+        Map<String, Integer> caps = new HashMap<>();
 
         try (FileInputStream fis = new FileInputStream(file);
-                Workbook workbook = WorkbookFactory.create(fis)) {
+             Workbook wb = WorkbookFactory.create(fis)) {
 
-            Sheet sheet = workbook.getSheetAt(0);
-            for (Row row : sheet) {
-                if (row.getRowNum() == 0)
-                    continue;
-
-                String salle = formatter.formatCellValue(row.getCell(0)).trim();
-                String type = formatter.formatCellValue(row.getCell(2)).trim();
-                String capStr = formatter.formatCellValue(row.getCell(3)).trim();
-
-                if (salle.isEmpty())
-                    continue;
+            for (Row row : wb.getSheetAt(0)) {
+                if (row.getRowNum() == 0) continue;
+                String salle = fmt.formatCellValue(row.getCell(0)).trim();
+                String type = fmt.formatCellValue(row.getCell(2)).trim();
+                if (salle.isEmpty()) continue;
 
                 int cap = 30;
-                try {
-                    cap = Integer.parseInt(capStr);
-                } catch (Exception e) {
-                }
-                roomCapacities.put(salle, cap);
-
-                if (type.toLowerCase().contains("amphi")) {
-                    amphis.add(salle);
-                } else {
-                    tds.add(salle);
-                }
+                try { cap = Integer.parseInt(fmt.formatCellValue(row.getCell(3)).trim()); } catch (Exception ignored) {}
+                caps.put(salle, cap);
+                (type.toLowerCase().contains("amphi") ? amphis : tds).add(salle);
             }
         } catch (Exception e) {
             System.err.println("Error reading rooms: " + e.getMessage());
             return;
         }
 
-        // 2. Define Titles (Hardcoded from DOCX)
         String[] conferences = {
-                "Etudes et métiers des arts, de la culture et du design",
-                "Etudes et métiers du commerce",
-                "Les études médicales",
-                "Management économie gestion Licences CPGE",
+                "Etudes et metiers des arts, de la culture et du design",
+                "Etudes et metiers du commerce", "Les etudes medicales",
+                "Management economie gestion Licences CPGE",
                 "Sciences et innovations technologiques BTS BUT",
-                "Sociologie, sciences de l’éducation, histoire géographie Licences CPGE",
-                "Etudes et métiers de l’informatique et du numérique",
-                "Etudes et métiers du droit - Science Po",
-                "Etudes et métiers du soin et de la santé",
-                "Etudes et métiers du tourisme et de l’hôtellerie BTS",
-                "Etudes et métiers de l'habitat et de la construction",
-                "Sciences et techniques Licence CPGE",
-                "Etudes et métiers de l’ingénieur",
-                "Etudes et métiers du management, économie, gestion (BTS/BUT)",
-                "Etudes et métiers du secteur social",
-                "Etudes et métiers du sport",
+                "Sociologie, sciences de l'education, histoire geographie Licences CPGE",
+                "Etudes et metiers de l'informatique et du numerique",
+                "Etudes et metiers du droit - Science Po",
+                "Etudes et metiers du soin et de la sante",
+                "Etudes et metiers du tourisme et de l'hotellerie BTS",
+                "Etudes et metiers de l'habitat et de la construction",
+                "Sciences et techniques Licence CPGE", "Etudes et metiers de l'ingenieur",
+                "Etudes et metiers du management, economie, gestion (BTS/BUT)",
+                "Etudes et metiers du secteur social", "Etudes et metiers du sport",
                 "Lettres et langues Licences CPGE",
-                "Sciences de la vie, de l’environnement et de l’agronomie BTS BUT",
-                "Etre étudiant _ Parcoursup"
+                "Sciences de la vie, de l'environnement et de l'agronomie BTS BUT",
+                "Etre etudiant / Parcoursup"
         };
 
-        String[] others = {
-                "Table ronde Etre étudiant en BTS (animation par des étudiants)",
-                "Table ronde Etre étudiant en BUT (animation par des étudiants)",
-                "Table ronde Etre étudiant en prépa CPI ou CPGE (animation par des étudiants)",
-                "Table ronde Etre alternant dans l'enseignement supérieur (animation par des étudiants)",
-                "Table ronde Etre étudiant en Licences (animation par des étudiants)",
-                "Table ronde: flash métier \"ingénieur\" (animation par des professionnels)",
-                "Table ronde: flash métier \"social\" (animation par des professionnels)",
-                "Table ronde: flash métier \"commerce\" (animation par des professionnels)",
-                "Table ronde: flash métier \"sport\" (animation par des professionnels)",
-                "Table ronde: flash métier \"paramédical\" (animation par des professionnels)",
-                "Table ronde: flash métier \"design / architecture\" (animation par des professionnels)"
+        String[] tablesRondes = {
+                "Table ronde Etre etudiant en BTS", "Table ronde Etre etudiant en BUT",
+                "Table ronde Etre etudiant en prepa CPI ou CPGE",
+                "Table ronde Etre alternant dans l'enseignement superieur",
+                "Table ronde Etre etudiant en Licences"
         };
 
-        // 3. Create Activities
-        int amphiIndex = 0;
-        int tdIndex = 0;
+        String[] flashMetiers = {
+                "Flash metier ingenieur", "Flash metier social", "Flash metier commerce",
+                "Flash metier sport", "Flash metier paramedical", "Flash metier design / architecture"
+        };
 
-        // Conferences -> Amphis
-        for (String title : conferences) {
-            poc.model.Activite a = new poc.model.Activite();
-            a.setTitre("Conférence " + title);
-            a.setType(poc.model.TypeActivite.CONFERENCE);
-
-            // Assign room (cycle if not enough)
-            String salle = "Salle indéfinie";
-            if (!amphis.isEmpty()) {
-                salle = amphis.get(amphiIndex % amphis.size());
-                amphiIndex++;
-            } else if (!tds.isEmpty()) {
-                salle = tds.get(amphiIndex % tds.size()); // Fallback to TDs
-                amphiIndex++;
-            }
-            a.setSalle(salle);
-            a.setNbPlaces(roomCapacities.getOrDefault(salle, 30));
-            activiteRepository.save(a);
+        int ai = 0, ti = 0;
+        for (String t : conferences) {
+            String salle = !amphis.isEmpty() ? amphis.get(ai++ % amphis.size()) : (!tds.isEmpty() ? tds.get(ai++ % tds.size()) : "TBD");
+            saveActivite(activiteRepo, "Conference " + t, TypeActivite.CONFERENCE, salle, caps);
         }
-
-        // Others -> TDs
-        for (String title : others) {
-            poc.model.Activite a = new poc.model.Activite();
-            a.setTitre(title);
-
-            if (title.toLowerCase().contains("flash")) {
-                a.setType(poc.model.TypeActivite.FLASH_METIER);
-            } else {
-                a.setType(poc.model.TypeActivite.TABLE_RONDE);
-            }
-
-            // Assign room
-            String salle = "Salle indéfinie";
-            if (!tds.isEmpty()) {
-                salle = tds.get(tdIndex % tds.size());
-                tdIndex++;
-            } else if (!amphis.isEmpty()) {
-                salle = amphis.get(tdIndex % amphis.size()); // Fallback
-                tdIndex++;
-            }
-            a.setSalle(salle);
-            a.setNbPlaces(roomCapacities.getOrDefault(salle, 30));
-            activiteRepository.save(a);
+        for (String t : tablesRondes) {
+            String salle = !tds.isEmpty() ? tds.get(ti++ % tds.size()) : "TBD";
+            saveActivite(activiteRepo, t, TypeActivite.TABLE_RONDE, salle, caps);
         }
-
-        System.out
-                .println("   ✅ Imported " + (conferences.length + others.length) + " activities with correct titles.");
+        for (String t : flashMetiers) {
+            String salle = !tds.isEmpty() ? tds.get(ti++ % tds.size()) : "TBD";
+            saveActivite(activiteRepo, t, TypeActivite.FLASH_METIER, salle, caps);
+        }
     }
 
-    public byte[] generateWishesExport(java.util.List<poc.model.Activite> activites,
-            java.util.List<poc.model.Voeu> voeux) {
-        try (Workbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
-                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+    public byte[] generateWishesExport(List<Activite> activites, List<Voeu> voeux) {
+        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            Map<Long, java.util.List<poc.model.Voeu>> voeuxByActivite = new HashMap<>();
-            for (poc.model.Voeu v : voeux) {
-                voeuxByActivite.computeIfAbsent(v.getActivite().getId(), k -> new java.util.ArrayList<>()).add(v);
-            }
+            Map<Long, List<Voeu>> byActivite = new HashMap<>();
+            for (Voeu v : voeux) byActivite.computeIfAbsent(v.getActivite().getId(), k -> new ArrayList<>()).add(v);
 
-            for (poc.model.Activite activite : activites) {
-                // Sanitize sheet name (max 31 chars, no special chars)
-                String sheetName = activite.getTitre().replaceAll("[^a-zA-Z0-9 ]", "").trim();
-                if (sheetName.length() > 30)
-                    sheetName = sheetName.substring(0, 30);
-                if (sheetName.isEmpty())
-                    sheetName = "Activite " + activite.getId();
-
-                // Ensure unique sheet names
+            for (Activite a : activites) {
+                String name = a.getTitre().replaceAll("[^a-zA-Z0-9 ]", "").trim();
+                if (name.length() > 30) name = name.substring(0, 30);
+                if (name.isEmpty()) name = "Activite " + a.getId();
                 int suffix = 1;
-                String originalName = sheetName;
-                while (workbook.getSheet(sheetName) != null) {
-                    sheetName = originalName + " " + suffix++;
-                }
+                String orig = name;
+                while (wb.getSheet(name) != null) name = orig + " " + suffix++;
 
-                Sheet sheet = workbook.createSheet(sheetName);
-
-                // Header
-                Row headerInfo = sheet.createRow(0);
-                headerInfo.createCell(0).setCellValue("Activité : " + activite.getTitre());
-                headerInfo.createCell(3).setCellValue("Salle : " + activite.getSalle());
-                headerInfo.createCell(5).setCellValue("Capacité : " + activite.getNbPlaces());
+                Sheet sheet = wb.createSheet(name);
+                Row info = sheet.createRow(0);
+                info.createCell(0).setCellValue("Activite : " + a.getTitre());
+                info.createCell(3).setCellValue("Salle : " + a.getSalle());
+                info.createCell(5).setCellValue("Capacite : " + a.getNbPlaces());
 
                 Row header = sheet.createRow(1);
-                header.createCell(0).setCellValue("Matricule");
-                header.createCell(1).setCellValue("Nom");
-                header.createCell(2).setCellValue("Prénom");
-                header.createCell(3).setCellValue("Lycée");
-                header.createCell(4).setCellValue("Classe");
-                header.createCell(5).setCellValue("Demi-journée");
-                header.createCell(6).setCellValue("Voeu N°");
+                String[] cols = {"Matricule", "Nom", "Prenom", "Lycee", "Classe", "Demi-journee", "Voeu N"};
+                for (int i = 0; i < cols.length; i++) header.createCell(i).setCellValue(cols[i]);
 
-                java.util.List<poc.model.Voeu> activityVoeux = voeuxByActivite.getOrDefault(activite.getId(),
-                        java.util.Collections.emptyList());
-
-                int rowIdx = 2;
-                for (poc.model.Voeu v : activityVoeux) {
-                    Row row = sheet.createRow(rowIdx++);
+                int idx = 2;
+                for (Voeu v : byActivite.getOrDefault(a.getId(), List.of())) {
+                    Row row = sheet.createRow(idx++);
                     Etudiant e = v.getEtudiant();
                     row.createCell(0).setCellValue(e.getMatriculeCsv());
                     row.createCell(1).setCellValue(e.getNom());
@@ -408,18 +193,49 @@ public class ExcelService {
                     row.createCell(5).setCellValue(e.getDemiJournee());
                     row.createCell(6).setCellValue(v.getPriorite());
                 }
-
-                // Auto-size columns
-                for (int i = 0; i < 7; i++) {
-                    sheet.autoSizeColumn(i);
-                }
+                for (int i = 0; i < 7; i++) sheet.autoSizeColumn(i);
             }
 
-            workbook.write(out);
+            wb.write(out);
             return out.toByteArray();
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    // --- Helpers ---
+
+    private void saveActivite(ActiviteRepository repo, String titre, TypeActivite type, String salle, Map<String, Integer> caps) {
+        Activite a = new Activite();
+        a.setTitre(titre);
+        a.setType(type);
+        a.setSalle(salle);
+        a.setNbPlaces(caps.getOrDefault(salle, 30));
+        repo.save(a);
+    }
+
+    private List<File> getExcelFiles(String folderPath) {
+        File folder = new File(folderPath);
+        if (!folder.exists()) return List.of();
+        File[] files = folder.listFiles((d, n) -> (n.endsWith(".xlsx") || n.endsWith(".xls")) && !n.equalsIgnoreCase("capacites.xlsx"));
+        return files != null ? List.of(files) : List.of();
+    }
+
+    private Map<String, Lycee> buildLyceeCache(LyceeRepository repo) {
+        Map<String, Lycee> cache = new HashMap<>();
+        repo.findAll().forEach(l -> cache.put(l.getNom().toUpperCase(), l));
+        return cache;
+    }
+
+    private Lycee getOrCreateLycee(String name, Map<String, Lycee> cache, LyceeRepository repo) {
+        Lycee lycee = cache.get(name.toUpperCase());
+        if (lycee == null) {
+            lycee = new Lycee();
+            lycee.setNom(name);
+            lycee = repo.save(lycee);
+            cache.put(name.toUpperCase(), lycee);
+        }
+        return lycee;
     }
 }
