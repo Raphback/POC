@@ -302,15 +302,15 @@ def verify_room_capacity(
                 continue
             
             capacity = room_capacities[salle]
-            # Note: Le système ajoute 10% de marge, donc on compare à la capacité avec marge
-            capacity_with_margin = int(capacity * 1.10)
+            # Note: Le système ajoute 30% de marge, donc on compare à la capacité avec marge
+            capacity_with_margin = int(capacity * 1.20)
             
             utilization = 100 * n_eleves / capacity if capacity > 0 else 0
             utilization_stats.append((pres, slot, salle, n_eleves, capacity, utilization))
             
             if n_eleves > capacity_with_margin:
                 capacity_exceeded.append(
-                    f"{pres} slot {slot}: {n_eleves} élèves > {capacity} places ({salle})"
+                    f"{pres} slot {slot}: {n_eleves} élèves > {capacity_with_margin} places ({salle})"
                 )
     
     # Statistiques

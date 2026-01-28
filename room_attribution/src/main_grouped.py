@@ -17,6 +17,155 @@ from data_loader import load_data
 from fesup_optimizer_ortools import FESUPOptimizer, Solution, HALF_DAY_NAMES
 from result_exporter import export_all_results
 import numpy as np
+import pandas as pd
+
+
+def export_aggregated_results(achart_dir: Path, students_by_half_day: dict, solutions: dict, all_results: dict):
+    """Exporte un fichier Excel avec les résultats agrégés des 4 demi-journées."""
+    
+    print("\n" + "="*60)
+    print("EXPORT DES RÉSULTATS AGRÉGÉS")
+    print("="*60)
+    
+    output_file = achart_dir / "resultats" / "resultats_complets.xlsx"
+    
+    with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+        
+        # ============================================================
+        # FEUILLE 1: STATISTIQUES GLOBALES
+        # ============================================================
+        stats_data = []
+        total_students = 0
+        total_voeu5 = 0
+        total_time = 0
+        
+        for hd in sorted(solutions.keys()):
+            solution = solutions[hd]
+            n_students = len(students_by_half_day[hd])
+            total_students += n_students
+            total_voeu5 += solution.objective_value
+            total_time += solution.computation_time
+            
+            stats_data.append({
+                'Demi-journée': HALF_DAY_NAMES[hd],
+                'Élèves': n_students,
+                'Status': solution.status,
+                'Voeux 5 utilisés': int(solution.objective_value),
+                'Temps calcul (s)': round(solution.computation_time, 1),
+                'Contraintes OK': 'Oui' if all(all_results[hd].values()) else 'Non'
+            })
+        
+        # Ligne totale
+        stats_data.append({
+            'Demi-journée': 'TOTAL',
+            'Élèves': total_students,
+            'Status': '-',
+            'Voeux 5 utilisés': int(total_voeu5),
+            'Temps calcul (s)': round(total_time, 1),
+            'Contraintes OK': '-'
+        })
+        
+        df_stats = pd.DataFrame(stats_data)
+        df_stats.to_excel(writer, sheet_name='Statistiques', index=False)
+        print("  ✓ Feuille 'Statistiques' créée")
+        
+        # ============================================================
+        # FEUILLE 2: PLANNING ÉLÈVES COMPLET
+        # ============================================================
+        all_students_data = []
+        
+        for hd in sorted(solutions.keys()):
+            planning_file = achart_dir / "resultats" / f"demi_journee_{hd}" / "planning_eleves.xlsx"
+            if planning_file.exists():
+                df_hd = pd.read_excel(planning_file)
+                df_hd.insert(0, 'Demi-journée', HALF_DAY_NAMES[hd])
+                all_students_data.append(df_hd)
+        
+        if all_students_data:
+            df_all_students = pd.concat(all_students_data, ignore_index=True)
+            df_all_students.to_excel(writer, sheet_name='Planning Élèves', index=False)
+            print(f"  ✓ Feuille 'Planning Élèves' créée ({len(df_all_students)} élèves)")
+        
+        # ============================================================
+        # FEUILLE 3: PLANNING PRÉSENTATEURS COMPLET
+        # ============================================================
+        all_presenters_data = []
+        
+        for hd in sorted(solutions.keys()):
+            planning_file = achart_dir / "resultats" / f"demi_journee_{hd}" / "planning_presentateurs.xlsx"
+            if planning_file.exists():
+                df_hd = pd.read_excel(planning_file)
+                df_hd.insert(0, 'Demi-journée', HALF_DAY_NAMES[hd])
+                all_presenters_data.append(df_hd)
+        
+        if all_presenters_data:
+            df_all_presenters = pd.concat(all_presenters_data, ignore_index=True)
+            df_all_presenters.to_excel(writer, sheet_name='Planning Présentateurs', index=False)
+            print(f"  ✓ Feuille 'Planning Présentateurs' créée ({len(df_all_presenters)} lignes)")
+        
+        # ============================================================
+        # FEUILLE 4: UTILISATION DES SALLES
+        # ============================================================
+        room_usage_data = []
+        
+        for hd in sorted(solutions.keys()):
+            planning_file = achart_dir / "resultats" / f"demi_journee_{hd}" / "planning_presentateurs.xlsx"
+            if planning_file.exists():
+                df_hd = pd.read_excel(planning_file)
+                for _, row in df_hd.iterrows():
+                    pres = row['Présentation']
+                    for col in df_hd.columns:
+                        if 'Slot' in col and pd.notna(row[col]) and row[col] != '-':
+                            cell = str(row[col])
+                            if '(' in cell:
+                                salle = cell.split('(')[0].strip()
+                                n_str = cell.split('(')[1].replace('él.)', '').strip()
+                                try:
+                                    n_eleves = int(n_str)
+                                except:
+                                    n_eleves = 0
+                                slot_num = col.split()[1]  # "Slot X (horaire)"
+                                room_usage_data.append({
+                                    'Demi-journée': HALF_DAY_NAMES[hd],
+                                    'Présentation': pres,
+                                    'Slot': slot_num,
+                                    'Salle': salle,
+                                    'Élèves': n_eleves
+                                })
+        
+        if room_usage_data:
+            df_room_usage = pd.DataFrame(room_usage_data)
+            df_room_usage.to_excel(writer, sheet_name='Utilisation Salles', index=False)
+            print(f"  ✓ Feuille 'Utilisation Salles' créée ({len(df_room_usage)} attributions)")
+        
+        # ============================================================
+        # FEUILLE 5: RÉSUMÉ PAR PRÉSENTATION
+        # ============================================================
+        pres_summary = {}
+        for item in room_usage_data:
+            pres = item['Présentation']
+            if pres not in pres_summary:
+                pres_summary[pres] = {'sessions': 0, 'total_eleves': 0}
+            pres_summary[pres]['sessions'] += 1
+            pres_summary[pres]['total_eleves'] += item['Élèves']
+        
+        pres_data = []
+        for pres, data in sorted(pres_summary.items()):
+            pres_type = 'Conférence' if pres.startswith('Conf') else ('Table Ronde' if pres.startswith('TR') else 'Flash Métier')
+            pres_data.append({
+                'Présentation': pres,
+                'Type': pres_type,
+                'Sessions totales': data['sessions'],
+                'Élèves totaux': data['total_eleves'],
+                'Moyenne/session': round(data['total_eleves'] / data['sessions'], 1) if data['sessions'] > 0 else 0
+            })
+        
+        if pres_data:
+            df_pres = pd.DataFrame(pres_data)
+            df_pres.to_excel(writer, sheet_name='Résumé Présentations', index=False)
+            print(f"  ✓ Feuille 'Résumé Présentations' créée ({len(df_pres)} présentations)")
+    
+    print(f"\n📊 Fichier agrégé exporté: {output_file}")
 
 
 def main():
@@ -142,6 +291,9 @@ def main():
     print(f"Total voeux 5 utilisés: {int(total_voeu5_used)}")
     print(f"Taux voeux 1-4: {100 * (1 - total_voeu5_used / (total_students * 4)):.1f}%")
     print(f"\nRésultats exportés dans: {achart_dir / 'resultats'}/")
+
+    # 5. Exporter le fichier agrégé
+    export_aggregated_results(achart_dir, students_by_half_day, solutions, all_results)
 
     return 0
 
